@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, X, Search, Shield, Building, User, KeyRound, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { faqList } from '../data/faqData';
-import { documentsList } from '../data/documentsData';
-import { eventsList } from '../data/eventsData';
+import { useSiteData } from '../context/SiteDataContext';
 
 interface HeaderProps {
   activeTab: string;
@@ -16,34 +14,37 @@ export default function Header({ activeTab, setActiveTab, setSearchQuery }: Head
   const [showSearch, setShowSearch] = useState(false);
   const [localSearch, setLocalSearch] = useState('');
 
+  const { siteMetadata, faqs, documents, events } = useSiteData();
+
   const navigation = [
     { name: 'Home', id: 'home' },
-    { name: 'Covenants & Docs', id: 'documents' },
-    { name: 'Board & Management', id: 'board' },
-    { name: 'Calendar & Events', id: 'calendar' },
+    { name: 'Board & Committees', id: 'board' },
+    { name: 'Documents', id: 'documents' },
+    { name: 'Calendar', id: 'calendar' },
     { name: 'FAQs', id: 'faq' },
-    { name: 'Resident Portal', id: 'portal' },
+    { name: 'Community Links', id: 'community-links' },
     { name: 'Contact Us', id: 'contact' },
+    { name: '✍️ Edit Site', id: 'edit-site' },
   ];
 
   // Perform a live lookup across FAQs, Documents, and Events
   const searchResults = localSearch.trim()
     ? [
-        ...faqList
+        ...faqs
           .filter(
             f =>
               f.question.toLowerCase().includes(localSearch.toLowerCase()) ||
               f.answer.toLowerCase().includes(localSearch.toLowerCase())
           )
           .map(f => ({ ...f, type: 'FAQ', tab: 'faq' })),
-        ...documentsList
+        ...documents
           .filter(
             d =>
               d.title.toLowerCase().includes(localSearch.toLowerCase()) ||
               d.description.toLowerCase().includes(localSearch.toLowerCase())
           )
           .map(d => ({ ...d, type: 'Document', tab: 'documents' })),
-        ...eventsList
+        ...events
           .filter(
             e =>
               e.title.toLowerCase().includes(localSearch.toLowerCase()) ||
@@ -75,10 +76,10 @@ export default function Header({ activeTab, setActiveTab, setSearchQuery }: Head
             </div>
             <div>
               <h1 className="font-serif text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
-                Waterford Place
+                {siteMetadata.name}
               </h1>
               <p className="text-xs font-mono font-medium tracking-widest uppercase text-slate-500">
-                Condominium Homes HOA
+                {siteMetadata.subtitle}
               </p>
             </div>
           </div>
@@ -94,7 +95,7 @@ export default function Header({ activeTab, setActiveTab, setSearchQuery }: Head
                   id={`nav-btn-${item.id}`}
                   className={`relative rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
                     isActive
-                      ? 'text-blue-900'
+                      ? 'text-blue-900 font-semibold'
                       : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
                   }`}
                 >

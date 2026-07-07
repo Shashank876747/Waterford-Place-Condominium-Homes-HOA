@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   User, ShieldAlert, Award, CalendarClock, Mail, 
-  Building2, PhoneCall, FileSpreadsheet, Hourglass, HelpCircle 
+  Building2, PhoneCall, FileSpreadsheet, Hourglass, HelpCircle, Edit2, Settings 
 } from 'lucide-react';
-import { boardMembers, committees, managementCompany } from '../data/boardData';
+import { useSiteData } from '../context/SiteDataContext';
 
 interface BoardTabProps {
   setActiveTab: (tab: string) => void;
@@ -11,6 +11,8 @@ interface BoardTabProps {
 }
 
 export default function BoardTab({ setActiveTab, setSelectedContact }: BoardTabProps) {
+  const { siteMetadata, boardMembers, committees, isEditMode } = useSiteData();
+
   const handleContactMember = (email: string) => {
     setSelectedContact(email);
     setActiveTab('contact');
@@ -21,11 +23,23 @@ export default function BoardTab({ setActiveTab, setSelectedContact }: BoardTabP
       {/* Introduction Banner */}
       <section className="text-center max-w-3xl mx-auto space-y-4">
         <h2 className="font-serif text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-          Board of Directors & Committees
+          Board & Committees
         </h2>
         <p className="text-sm sm:text-base text-slate-500 leading-relaxed">
-          Waterford Place is governed by a volunteer Board of Directors comprised of resident co-owners. The board is elected annually and serves staggered multi-year terms to oversee community finances and guidelines.
+          {siteMetadata.name} is governed by a volunteer Board of Directors comprised of resident co-owners. The board is elected annually and serves staggered multi-year terms to oversee community finances and guidelines.
         </p>
+        
+        {isEditMode && (
+          <div className="pt-2">
+            <button
+              onClick={() => setActiveTab('edit-site')}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-xs font-bold text-amber-800 transition-colors hover:bg-amber-100"
+            >
+              <Settings className="h-3.5 w-3.5" />
+              <span>Modify Board Members in Admin Panel</span>
+            </button>
+          </div>
+        )}
       </section>
 
       {/* Board Members Grid */}
@@ -41,7 +55,7 @@ export default function BoardTab({ setActiveTab, setSelectedContact }: BoardTabP
           {boardMembers.map((member) => (
             <div
               key={member.id}
-              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
+              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between relative group"
             >
               <div className="space-y-4">
                 {/* Visual Avatar */}
@@ -59,7 +73,7 @@ export default function BoardTab({ setActiveTab, setSelectedContact }: BoardTabP
                   </div>
                 </div>
 
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-650 leading-relaxed">
                   {member.description}
                 </p>
               </div>
@@ -77,8 +91,24 @@ export default function BoardTab({ setActiveTab, setSelectedContact }: BoardTabP
                   Message
                 </button>
               </div>
+
+              {isEditMode && (
+                <button
+                  onClick={() => setActiveTab('edit-site')}
+                  className="absolute top-3 right-3 p-1.5 rounded-full bg-slate-100 hover:bg-amber-100 text-amber-600 transition-all opacity-0 group-hover:opacity-100"
+                  title="Edit Board Member"
+                >
+                  <Edit2 className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
           ))}
+
+          {boardMembers.length === 0 && (
+            <div className="col-span-full text-center py-12 rounded-2xl border border-dashed border-slate-200 bg-slate-50">
+              <p className="text-sm text-slate-500">No active board members logged. Create some in the Edit Site dashboard!</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -139,20 +169,20 @@ export default function BoardTab({ setActiveTab, setSelectedContact }: BoardTabP
           <div>
             <span className="text-xs font-mono font-bold tracking-widest uppercase text-slate-400">Professional Property Management</span>
             <h3 className="font-serif text-2xl font-bold text-slate-900 mt-1">
-              {managementCompany.name}
+              {siteMetadata.managementName}
             </h3>
           </div>
           <p className="text-sm text-slate-600 leading-relaxed max-w-xl">
-            Our association partners with Elite Property Management Services to oversee daily maintenance operations, process association fees, manage financial books, and handle official vendor contracting.
+            Our association partners with {siteMetadata.managementName} to oversee daily maintenance operations, process association fees, manage financial books, and handle official vendor contracting.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-2">
             <div className="space-y-1">
-              <span className="text-slate-400 font-mono uppercase font-bold tracking-wider">Representative CAM:</span>
-              <p className="font-semibold text-slate-800">{managementCompany.representative}</p>
+              <span className="text-slate-400 font-mono uppercase font-bold tracking-wider">Office Location:</span>
+              <p className="font-semibold text-slate-850 leading-relaxed">{siteMetadata.managementAddress}</p>
             </div>
             <div className="space-y-1">
               <span className="text-slate-400 font-mono uppercase font-bold tracking-wider">Office Hours:</span>
-              <p className="font-semibold text-slate-800">{managementCompany.officeHours}</p>
+              <p className="font-semibold text-slate-800">{siteMetadata.managementHours}</p>
             </div>
           </div>
         </div>
@@ -165,21 +195,27 @@ export default function BoardTab({ setActiveTab, setSelectedContact }: BoardTabP
           <div className="space-y-3.5 text-xs">
             <div className="flex items-center justify-between">
               <span className="text-slate-400 font-medium">Main Phone:</span>
-              <span className="font-bold text-slate-800">{managementCompany.phone}</span>
+              <span className="font-bold text-slate-800">{siteMetadata.managementPhone}</span>
             </div>
+            {siteMetadata.managementFax && (
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400 font-medium">Fax:</span>
+                <span className="font-semibold text-slate-800">{siteMetadata.managementFax}</span>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <span className="text-slate-400 font-medium">CAM Email:</span>
-              <span className="font-semibold text-blue-900 break-all">{managementCompany.email}</span>
+              <span className="font-semibold text-blue-900 break-all">{siteMetadata.managementEmail}</span>
             </div>
             <div className="border-t border-slate-100 pt-3">
               <p className="text-[10px] text-rose-500 font-mono uppercase font-bold flex items-center gap-1">
                 <PhoneCall className="h-3 w-3" /> Emergency Call (After Hours):
               </p>
-              <p className="font-bold text-slate-800 mt-1">{managementCompany.emergencyPhone}</p>
+              <p className="font-bold text-slate-850 mt-1 leading-normal">{siteMetadata.managementEmergency}</p>
             </div>
           </div>
           <button
-            onClick={() => handleContactMember(managementCompany.email)}
+            onClick={() => handleContactMember(siteMetadata.managementEmail)}
             className="w-full rounded-xl bg-slate-950 py-2.5 text-xs font-bold text-white transition-colors hover:bg-slate-900 flex items-center justify-center gap-1.5"
           >
             <Mail className="h-4 w-4 text-amber-400" />

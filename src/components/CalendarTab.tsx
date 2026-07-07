@@ -3,10 +3,11 @@ import {
   CalendarDays, ChevronLeft, ChevronRight, MapPin, Clock, 
   Tag, Info, Check, PlusCircle, AlertCircle, Loader2 
 } from 'lucide-react';
-import { eventsList } from '../data/eventsData';
 import { CalendarEvent } from '../types';
+import { useSiteData } from '../context/SiteDataContext';
 
 export default function CalendarTab() {
+  const { events } = useSiteData();
   const [activeCategory, setActiveCategory] = useState<'all' | 'meeting' | 'social' | 'trash' | 'maintenance' | 'holiday'>('all');
   const [selectedDay, setSelectedDay] = useState<number | null>(15); // Default to July 15, 2026 (Board meeting day!)
   const [addedEvents, setAddedEvents] = useState<string[]>([]);
@@ -36,7 +37,7 @@ export default function CalendarTab() {
   };
 
   // Get active filtered events
-  const filteredEvents = eventsList.filter((evt) => {
+  const filteredEvents = events.filter((evt) => {
     const matchesCategory = activeCategory === 'all' || evt.category === activeCategory;
     
     // If a day is selected in the grid, filter list to that day, unless category changes (then we show all)
@@ -52,7 +53,7 @@ export default function CalendarTab() {
   const getEventsForDay = (day: number) => {
     const dayStr = day < 10 ? `0${day}` : `${day}`;
     const dateStr = `2026-07-${dayStr}`;
-    return eventsList.filter((evt) => evt.date === dateStr);
+    return events.filter((evt) => evt.date === dateStr);
   };
 
   // Trigger simulated calendar file export
@@ -220,8 +221,8 @@ export default function CalendarTab() {
                   </span>
                   <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-slate-200/50 text-slate-500">
                     {cat.id === 'all' 
-                      ? eventsList.length 
-                      : eventsList.filter(e => e.category === cat.id).length}
+                      ? events.length 
+                      : events.filter(e => e.category === cat.id).length}
                   </span>
                 </button>
               ))}

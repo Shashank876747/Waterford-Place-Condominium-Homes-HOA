@@ -4,10 +4,11 @@ import {
   ShieldAlert, BadgeInfo 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { faqList } from '../data/faqData';
 import { FaqItem } from '../types';
+import { useSiteData } from '../context/SiteDataContext';
 
 export default function FaqTab() {
+  const { faqs } = useSiteData();
   const [activeCategory, setActiveCategory] = useState<'all' | 'dues' | 'parking' | 'pets' | 'trash' | 'amenities' | 'rules'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>('faq-1'); // Default open first FAQ
@@ -31,7 +32,7 @@ export default function FaqTab() {
     rules: 'Covenants',
   };
 
-  const filteredFaqs = faqList.filter((faq) => {
+  const filteredFaqs = faqs.filter((faq) => {
     const matchesCategory = activeCategory === 'all' || faq.category === activeCategory;
     const matchesSearch = 
       faq.question.toLowerCase().includes(searchTerm.toLowerCase()) || 

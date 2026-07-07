@@ -4,10 +4,12 @@ import {
   HelpCircle, Scale, ShieldCheck, CheckCircle2, Check, Loader2 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { documentsList, covenantsQuickReference } from '../data/documentsData';
+import { covenantsQuickReference } from '../data/documentsData';
 import { DocumentItem } from '../types';
+import { useSiteData } from '../context/SiteDataContext';
 
 export default function DocumentsTab() {
+  const { siteMetadata, documents } = useSiteData();
   const [activeCategory, setActiveCategory] = useState<'all' | 'governing' | 'rules' | 'minutes' | 'forms'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -21,7 +23,7 @@ export default function DocumentsTab() {
     { name: 'Forms & Applications', id: 'forms' },
   ];
 
-  const filteredDocs = documentsList.filter((doc) => {
+  const filteredDocs = documents.filter((doc) => {
     const matchesCategory = activeCategory === 'all' || doc.category === activeCategory;
     const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           doc.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
