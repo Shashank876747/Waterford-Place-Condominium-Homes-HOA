@@ -1,0 +1,6 @@
+{
+  "name": "Waterford Place HOA",
+  "description": "Official community website for Waterford Place Condominium Homes HOA featuring documents, announcements, board updates, and resident request portals.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
