@@ -7,7 +7,12 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { MaintenanceRequest, ArcRequest } from '../types';
 
-export default function PortalTab() {
+interface PortalTabProps {
+  initialView?: 'dues' | 'maintenance' | 'arc';
+  autoLogin?: boolean;
+}
+
+export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {}) {
   // Authentication state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [unitNo, setUnitNo] = useState('');
@@ -16,6 +21,18 @@ export default function PortalTab() {
 
   // Portal tabs inside resident portal
   const [portalView, setPortalView] = useState<'dues' | 'maintenance' | 'arc'>('dues');
+
+  // Sync props to state
+  React.useEffect(() => {
+    if (initialView) {
+      setPortalView(initialView);
+    }
+    if (autoLogin) {
+      setUnitNo('B-204');
+      setResidentName('Arthur Pendelton');
+      setIsLoggedIn(true);
+    }
+  }, [initialView, autoLogin]);
 
   // Dues state
   const [duesBalance, setDuesBalance] = useState(385.00);

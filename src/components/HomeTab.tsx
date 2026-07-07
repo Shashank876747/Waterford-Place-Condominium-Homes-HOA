@@ -10,9 +10,10 @@ import { Announcement } from '../types';
 
 interface HomeTabProps {
   setActiveTab: (tab: string) => void;
+  navigateToPortal?: (tab: string, subTab?: 'dues' | 'maintenance' | 'arc') => void;
 }
 
-export default function HomeTab({ setActiveTab }: HomeTabProps) {
+export default function HomeTab({ setActiveTab, navigateToPortal }: HomeTabProps) {
   const { siteMetadata, announcements, isEditMode, updateSiteMetadata } = useSiteData();
 
   // In-place editing state
@@ -42,6 +43,7 @@ export default function HomeTab({ setActiveTab }: HomeTabProps) {
       desc: 'Submit exterior alteration requests online.',
       icon: PenTool,
       tab: 'portal',
+      subTab: 'arc' as const,
       color: 'from-purple-500 to-pink-600',
     },
     {
@@ -49,6 +51,7 @@ export default function HomeTab({ setActiveTab }: HomeTabProps) {
       desc: 'Log issues for community fixtures or grounds.',
       icon: Wrench,
       tab: 'portal',
+      subTab: 'maintenance' as const,
       color: 'from-emerald-500 to-teal-600',
     },
     {
@@ -56,6 +59,7 @@ export default function HomeTab({ setActiveTab }: HomeTabProps) {
       desc: 'Review balance and pay monthly dues securely.',
       icon: DollarSign,
       tab: 'portal',
+      subTab: 'dues' as const,
       color: 'from-amber-500 to-orange-600',
     }
   ];
@@ -270,7 +274,13 @@ export default function HomeTab({ setActiveTab }: HomeTabProps) {
             return (
               <div
                 key={idx}
-                onClick={() => setActiveTab(item.tab)}
+                onClick={() => {
+                  if (item.tab === 'portal' && navigateToPortal) {
+                    navigateToPortal('portal', item.subTab);
+                  } else {
+                    setActiveTab(item.tab);
+                  }
+                }}
                 className="group relative cursor-pointer overflow-hidden rounded-2xl border border-slate-150 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-slate-300"
               >
                 <div className={`absolute top-0 left-0 w-2 h-full bg-gradient-to-b ${item.color}`} />

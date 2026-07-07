@@ -18,12 +18,27 @@ import ContactTab from './components/ContactTab';
 import CommunityLinksTab from './components/CommunityLinksTab';
 import EditSiteTab from './components/EditSiteTab';
 import { useSiteData } from './context/SiteDataContext';
+import QuickActions from './components/QuickActions';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('home');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [showNotification, setShowNotification] = useState(true);
   const [prefilledEmail, setPrefilledEmail] = useState('');
+  
+  // Quick Actions / Portal Deep Link States
+  const [portalSubTab, setPortalSubTab] = useState<'dues' | 'maintenance' | 'arc'>('dues');
+  const [portalAutoLogin, setPortalAutoLogin] = useState<boolean>(false);
+
+  const handleQuickNavigate = (tab: string, subTab?: 'dues' | 'maintenance' | 'arc') => {
+    if (tab === 'portal' && subTab) {
+      setPortalSubTab(subTab);
+      setPortalAutoLogin(true);
+    } else {
+      setPortalAutoLogin(false);
+    }
+    setActiveTab(tab);
+  };
   
   const { announcements } = useSiteData();
 
@@ -106,7 +121,7 @@ export default function App() {
             className="outline-none"
           >
             {activeTab === 'home' && (
-              <HomeTab setActiveTab={setActiveTab} />
+              <HomeTab setActiveTab={setActiveTab} navigateToPortal={handleQuickNavigate} />
             )}
             {activeTab === 'documents' && (
               <DocumentsTab />
@@ -124,7 +139,7 @@ export default function App() {
               <FaqTab />
             )}
             {activeTab === 'portal' && (
-              <PortalTab />
+              <PortalTab initialView={portalSubTab} autoLogin={portalAutoLogin} />
             )}
             {activeTab === 'contact' && (
               <ContactTab prefilledEmail={prefilledEmail} />
@@ -138,6 +153,9 @@ export default function App() {
           </motion.div>
         </AnimatePresence>
       </main>
+
+      {/* Floating Quick Actions Menu */}
+      <QuickActions onNavigate={handleQuickNavigate} />
 
       {/* Site Footer */}
       <Footer setActiveTab={setActiveTab} />
