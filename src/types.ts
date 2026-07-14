@@ -87,3 +87,14 @@ export interface CommunityLink {
   category: 'municipal' | 'safety' | 'utility' | 'general';
 }
 
+export interface ResidentUser {
+  id: string;
+  name: string;
+  unitNo: string;
+  email: string;
+  phone?: string;
+  password?: string;
+  registeredAt: string;
+}
+
+

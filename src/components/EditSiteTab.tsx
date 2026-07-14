@@ -18,11 +18,12 @@ export default function EditSiteTab() {
     faqs, addFaq, updateFaq, deleteFaq,
     communityPhotos, addCommunityPhoto, deleteCommunityPhoto,
     communityLinks, addCommunityLink, deleteCommunityLink,
+    registeredUsers, deleteRegisteredUser,
     isEditMode, setIsEditMode,
     resetAllToDefault
   } = useSiteData();
 
-  const [activeSubSection, setActiveSubSection] = useState<'metadata' | 'announcements' | 'board' | 'events' | 'documents' | 'faqs' | 'links' | 'photos'>('metadata');
+  const [activeSubSection, setActiveSubSection] = useState<'metadata' | 'announcements' | 'board' | 'events' | 'documents' | 'faqs' | 'links' | 'photos' | 'residents'>('metadata');
 
   // Metadata Forms states
   const [metaForm, setMetaForm] = useState<SiteMetadata>({ ...siteMetadata });
@@ -191,6 +192,7 @@ export default function EditSiteTab() {
             { id: 'faqs', label: 'FAQ Directory', icon: HelpCircle },
             { id: 'links', label: 'Public Links', icon: ExternalLink },
             { id: 'photos', label: 'Gallery Photos', icon: Camera },
+            { id: 'residents', label: 'Registered Residents', icon: Users },
           ].map((sec) => {
             const Icon = sec.icon;
             const isSelected = activeSubSection === sec.id;
@@ -1110,6 +1112,80 @@ export default function EditSiteTab() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Section 9: Registered Residents */}
+          {activeSubSection === 'residents' && (
+            <div className="space-y-6">
+              <div className="border-b border-slate-100 pb-3">
+                <h3 className="font-serif font-bold text-slate-900 text-lg">Registered Portal Accounts</h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  View, audit, and manage portal log-ins created by community residents.
+                </p>
+              </div>
+
+              {/* Resident Accounts Directory */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-serif font-bold text-slate-850 text-sm">
+                    Active Residents ({registeredUsers.length})
+                  </h4>
+                  <div className="text-[10px] bg-amber-50 text-amber-800 font-bold px-2 py-1 rounded border border-amber-200">
+                    🔒 Security Sandboxed
+                  </div>
+                </div>
+
+                {registeredUsers.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-slate-400 text-xs">
+                    No co-owners have registered accounts yet.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto rounded-xl border border-slate-150 bg-white shadow-xs">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-150 text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                          <th className="px-4 py-3">Resident & Unit</th>
+                          <th className="px-4 py-3">Email Address</th>
+                          <th className="px-4 py-3">Phone</th>
+                          <th className="px-4 py-3">Portal Password</th>
+                          <th className="px-4 py-3 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
+                        {registeredUsers.map((user) => (
+                          <tr key={user.id} className="hover:bg-slate-50/50">
+                            <td className="px-4 py-3">
+                              <div className="font-bold text-slate-900">{user.name}</div>
+                              <div className="mt-0.5 text-[10px] font-mono text-slate-500">Unit {user.unitNo} • Joined {user.registeredAt}</div>
+                            </td>
+                            <td className="px-4 py-3 font-mono text-slate-600">{user.email}</td>
+                            <td className="px-4 py-3 text-slate-500">{user.phone || '—'}</td>
+                            <td className="px-4 py-3">
+                              <span className="bg-slate-100 text-slate-800 font-mono text-[10px] px-1.5 py-0.5 rounded border border-slate-200 font-bold">
+                                {user.password}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Are you sure you want to revoke portal access for ${user.name} (Unit ${user.unitNo})?`)) {
+                                    deleteRegisteredUser(user.id);
+                                  }
+                                }}
+                                className="inline-flex items-center gap-1 text-rose-600 hover:text-rose-700 font-bold"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                <span>Revoke</span>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           )}

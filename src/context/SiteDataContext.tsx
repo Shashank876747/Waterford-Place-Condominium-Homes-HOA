@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { BoardMember, Committee, Announcement, DocumentItem, CalendarEvent, FaqItem, CommunityLink } from '../types';
+import { BoardMember, Committee, Announcement, DocumentItem, CalendarEvent, FaqItem, CommunityLink, ResidentUser } from '../types';
 
 export interface SiteMetadata {
   name: string;
@@ -65,6 +65,9 @@ interface SiteDataContextType {
   addCommunityLink: (link: Omit<CommunityLink, 'id'>) => void;
   updateCommunityLink: (id: string, partial: Partial<CommunityLink>) => void;
   deleteCommunityLink: (id: string) => void;
+  registeredUsers: ResidentUser[];
+  addRegisteredUser: (user: Omit<ResidentUser, 'id' | 'registeredAt'>) => void;
+  deleteRegisteredUser: (id: string) => void;
   isEditMode: boolean;
   setIsEditMode: (val: boolean) => void;
   resetAllToDefault: () => void;
@@ -109,6 +112,28 @@ const defaultFaqs: FaqItem[] = [];
 
 const defaultDocuments: DocumentItem[] = [];
 
+const defaultRegisteredUsers: ResidentUser[] = [
+  {
+    id: 'usr-default-1',
+    name: 'Arthur Pendelton',
+    unitNo: 'B-204',
+    email: 'arthur.p@example.com',
+    phone: '555-0192',
+    password: 'demo123',
+    registeredAt: '2026-01-15'
+  },
+  {
+    id: 'usr-default-2',
+    name: 'Clara Jenkins',
+    unitNo: 'A-102',
+    email: 'clara.j@example.com',
+    phone: '555-0143',
+    password: 'password123',
+    registeredAt: '2026-03-22'
+  }
+];
+
+
 
 export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [siteMetadata, setSiteMetadata] = useState<SiteMetadata>(defaultMetadata);
@@ -120,6 +145,7 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [faqs, setFaqs] = useState<FaqItem[]>(defaultFaqs);
   const [communityPhotos, setCommunityPhotos] = useState<PhotoItem[]>(defaultPhotos);
   const [communityLinks, setCommunityLinks] = useState<CommunityLink[]>(defaultLinks);
+  const [registeredUsers, setRegisteredUsers] = useState<ResidentUser[]>(defaultRegisteredUsers);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
 
   // Load from localStorage on mount
@@ -136,12 +162,20 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         localStorage.removeItem('wp_faqs');
         localStorage.removeItem('wp_photos');
         localStorage.removeItem('wp_links');
+        localStorage.removeItem('wp_registered_users');
         localStorage.setItem('wp_data_cleaned_v2', 'true');
         return; // Leave as empty arrays
       }
 
       const savedMeta = localStorage.getItem('wp_meta');
       if (savedMeta) setSiteMetadata(JSON.parse(savedMeta));
+
+      const savedUsers = localStorage.getItem('wp_registered_users');
+      if (savedUsers) {
+        setRegisteredUsers(JSON.parse(savedUsers));
+      } else {
+        localStorage.setItem('wp_registered_users', JSON.stringify(defaultRegisteredUsers));
+      }
 
       const savedAnn = localStorage.getItem('wp_announcements');
       if (savedAnn) setAnnouncements(JSON.parse(savedAnn));
@@ -425,6 +459,27 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
   };
 
+  const addRegisteredUser = (user: Omit<ResidentUser, 'id' | 'registeredAt'>) => {
+    setRegisteredUsers((prev) => {
+      const newUser: ResidentUser = {
+        ...user,
+        id: `usr-${Date.now()}`,
+        registeredAt: new Date().toISOString().split('T')[0],
+      };
+      const updated = [...prev, newUser];
+      saveItem('wp_registered_users', updated);
+      return updated;
+    });
+  };
+
+  const deleteRegisteredUser = (id: string) => {
+    setRegisteredUsers((prev) => {
+      const updated = prev.filter((u) => u.id !== id);
+      saveItem('wp_registered_users', updated);
+      return updated;
+    });
+  };
+
   const handleSetIsEditMode = (val: boolean) => {
     setIsEditMode(val);
     saveItem('wp_edit_mode', val);
@@ -441,6 +496,7 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setFaqs(defaultFaqs);
       setCommunityPhotos(defaultPhotos);
       setCommunityLinks(defaultLinks);
+      setRegisteredUsers(defaultRegisteredUsers);
       setIsEditMode(false);
 
       localStorage.removeItem('wp_meta');
@@ -452,6 +508,7 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       localStorage.removeItem('wp_faqs');
       localStorage.removeItem('wp_photos');
       localStorage.removeItem('wp_links');
+      localStorage.removeItem('wp_registered_users');
       localStorage.removeItem('wp_edit_mode');
     }
   };
@@ -495,6 +552,9 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         addCommunityLink,
         updateCommunityLink,
         deleteCommunityLink,
+        registeredUsers,
+        addRegisteredUser,
+        deleteRegisteredUser,
         isEditMode,
         setIsEditMode: handleSetIsEditMode,
         resetAllToDefault,

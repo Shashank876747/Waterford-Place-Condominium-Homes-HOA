@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { 
   KeyRound, DollarSign, Wrench, Hammer, CheckCircle2, 
   UserCheck, LogOut, ArrowRight, Loader2, CreditCard, 
-  FileText, History, Info, AlertTriangle, PenTool, Check, Trash2
+  FileText, History, Info, AlertTriangle, PenTool, Check, Trash2, UserPlus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MaintenanceRequest, ArcRequest } from '../types';
 import DocumentUploader from './DocumentUploader';
+import { useSiteData } from '../context/SiteDataContext';
 
 interface PortalTabProps {
   initialView?: 'dues' | 'maintenance' | 'arc';
@@ -14,11 +15,27 @@ interface PortalTabProps {
 }
 
 export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {}) {
+  const { registeredUsers, addRegisteredUser } = useSiteData();
+
   // Authentication state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [unitNo, setUnitNo] = useState('');
+  const [password, setPassword] = useState('demo123');
   const [residentName, setResidentName] = useState('');
   const [authError, setAuthError] = useState('');
+
+  // Form toggle
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+
+  // Sign Up Form states
+  const [signUpName, setSignUpName] = useState('');
+  const [signUpUnit, setSignUpUnit] = useState('');
+  const [signUpEmail, setSignUpEmail] = useState('');
+  const [signUpPhone, setSignUpPhone] = useState('');
+  const [signUpPass, setSignUpPass] = useState('');
+  const [signUpConfirmPass, setSignUpConfirmPass] = useState('');
+  const [signUpError, setSignUpError] = useState('');
+  const [signUpSuccess, setSignUpSuccess] = useState('');
 
   // Portal tabs inside resident portal
   const [portalView, setPortalView] = useState<'dues' | 'maintenance' | 'arc'>('dues');
@@ -110,16 +127,98 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
   const [arcAttachedFile, setArcAttachedFile] = useState<{ name: string; size: string } | null>(null);
   const [isSubmittingArc, setIsSubmittingArc] = useState(false);
 
-  // Handle mock resident login
+  // Handle resident login checking against registered users
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    setAuthError('');
     if (!unitNo.trim()) {
       setAuthError('Please enter a valid unit number.');
       return;
     }
-    setResidentName('Arthur Pendelton');
-    setIsLoggedIn(true);
-    setAuthError('');
+    if (!password.trim()) {
+      setAuthError('Please enter your password.');
+      return;
+    }
+
+    const matchedUser = registeredUsers.find(
+      (user) => user.unitNo.trim().toLowerCase() === unitNo.trim().toLowerCase()
+    );
+
+    if (matchedUser) {
+      if (matchedUser.password === password) {
+        setResidentName(matchedUser.name);
+        setUnitNo(matchedUser.unitNo); // Use capitalized/normalized version
+        setIsLoggedIn(true);
+        setAuthError('');
+      } else {
+        setAuthError('Incorrect password for this unit. Please check and try again.');
+      }
+    } else {
+      setAuthError(`Unit "${unitNo}" is not registered yet. Feel free to click "Create Account" below to register this unit!`);
+    }
+  };
+
+  // Handle resident sign-up registration
+  const handleSignUp = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSignUpError('');
+    setSignUpSuccess('');
+
+    if (!signUpName.trim()) {
+      setSignUpError('Please enter your full name.');
+      return;
+    }
+    if (!signUpUnit.trim()) {
+      setSignUpError('Please specify your condominium unit.');
+      return;
+    }
+    if (!signUpEmail.trim()) {
+      setSignUpError('Please enter your email address.');
+      return;
+    }
+    if (!signUpPass.trim()) {
+      setSignUpError('Please create a portal password.');
+      return;
+    }
+    if (signUpPass !== signUpConfirmPass) {
+      setSignUpError('Passwords do not match.');
+      return;
+    }
+
+    // Check if unit is already registered
+    const unitExists = registeredUsers.find(
+      (user) => user.unitNo.trim().toLowerCase() === signUpUnit.trim().toLowerCase()
+    );
+    if (unitExists) {
+      setSignUpError(`Unit "${signUpUnit.toUpperCase()}" is already registered to ${unitExists.name}. If this is you, please log in.`);
+      return;
+    }
+
+    // Save resident
+    addRegisteredUser({
+      name: signUpName.trim(),
+      unitNo: signUpUnit.trim().toUpperCase(),
+      email: signUpEmail.trim(),
+      phone: signUpPhone.trim() || undefined,
+      password: signUpPass,
+    });
+
+    setSignUpSuccess(`Resident account registered successfully for Unit ${signUpUnit.toUpperCase()}! Preparing login portal...`);
+    
+    // Auto populate login fields
+    setUnitNo(signUpUnit.trim().toUpperCase());
+    setPassword(signUpPass);
+
+    setTimeout(() => {
+      setAuthMode('signin');
+      setSignUpName('');
+      setSignUpUnit('');
+      setSignUpEmail('');
+      setSignUpPhone('');
+      setSignUpPass('');
+      setSignUpConfirmPass('');
+      setSignUpSuccess('');
+    }, 2000);
   };
 
   // Handle mock dues payment
@@ -243,88 +342,250 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
         </p>
       </section>
 
-      {/* Guest View: Sign-In Box */}
+      {/* Guest View: Sign-In / Sign-Up Box */}
       <AnimatePresence mode="wait">
         {!isLoggedIn ? (
           <motion.div
-            key="login-view"
+            key="auth-view"
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
             className="max-w-md mx-auto rounded-3xl border border-slate-200 bg-white p-8 shadow-md space-y-6"
-            id="portal-login-form"
+            id="portal-auth-form"
           >
+            {/* Header branding */}
             <div className="text-center space-y-2">
               <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-900 to-indigo-950 text-amber-400 shadow">
-                <KeyRound className="h-6 w-6" />
+                {authMode === 'signin' ? (
+                  <KeyRound className="h-6 w-6" />
+                ) : (
+                  <UserPlus className="h-6 w-6" />
+                )}
               </div>
               <h3 className="font-serif font-bold text-slate-900 text-xl">
-                Sign In to Resident Account
+                {authMode === 'signin' ? 'Resident Portal Access' : 'Create Resident Account'}
               </h3>
               <p className="text-xs text-slate-500">
-                Enter your assigned unit and secret password
+                {authMode === 'signin' 
+                  ? 'Access payments, maintenance dispatch, and committee reviews.' 
+                  : 'Register your unit to activate dynamic self-service features.'}
               </p>
             </div>
 
-            {authError && (
-              <div className="rounded-xl bg-rose-50 text-rose-700 text-xs p-3 border border-rose-200 font-medium">
-                {authError}
-              </div>
+            {/* Tab selector */}
+            <div className="flex border-b border-slate-100 p-0.5 bg-slate-50 rounded-xl">
+              <button
+                type="button"
+                onClick={() => { setAuthMode('signin'); setAuthError(''); }}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                  authMode === 'signin'
+                    ? 'bg-white text-blue-900 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+                id="tab-signin-btn"
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => { setAuthMode('signup'); setSignUpError(''); }}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                  authMode === 'signup'
+                    ? 'bg-white text-blue-900 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+                id="tab-signup-btn"
+              >
+                Register Unit
+              </button>
+            </div>
+
+            {/* Auth forms */}
+            {authMode === 'signin' ? (
+              <form onSubmit={handleLogin} className="space-y-4">
+                {authError && (
+                  <div className="rounded-xl bg-rose-50 text-rose-700 text-xs p-3 border border-rose-200 font-medium">
+                    {authError}
+                  </div>
+                )}
+
+                <div className="space-y-1">
+                  <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
+                    Condominium Unit No.
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={unitNo}
+                    onChange={(e) => setUnitNo(e.target.value)}
+                    placeholder="e.g. B-204"
+                    className="w-full rounded-xl border border-slate-250 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-blue-900 focus:bg-white"
+                    id="login-unit-input"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
+                    Portal Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full rounded-xl border border-slate-250 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-blue-900 focus:bg-white"
+                    id="login-pass-input"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between text-xs pt-1">
+                  <label className="flex items-center gap-1.5 text-slate-500 cursor-pointer">
+                    <input type="checkbox" defaultChecked className="rounded border-slate-300 text-blue-900" />
+                    <span>Remember Unit</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => alert(`In demo mode, you can log in as unit B-204 with the password 'demo123', or create a brand new account with any custom password you like.`)}
+                    className="text-blue-900 font-bold hover:underline bg-transparent border-0 cursor-pointer"
+                  >
+                    Need Help?
+                  </button>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-slate-950 py-3 text-sm font-semibold text-white shadow hover:bg-slate-900 transition-colors"
+                  id="login-submit-btn"
+                >
+                  <span>Authorize & Connect</span>
+                  <ArrowRight className="h-4 w-4 text-amber-400" />
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleSignUp} className="space-y-4">
+                {signUpError && (
+                  <div className="rounded-xl bg-rose-50 text-rose-700 text-xs p-3 border border-rose-200 font-medium">
+                    {signUpError}
+                  </div>
+                )}
+                {signUpSuccess && (
+                  <div className="rounded-xl bg-emerald-50 text-emerald-800 text-xs p-3 border border-emerald-200 font-medium flex items-center gap-2">
+                    <Check className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <span>{signUpSuccess}</span>
+                  </div>
+                )}
+
+                <div className="space-y-1">
+                  <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
+                    Full Resident Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={signUpName}
+                    onChange={(e) => setSignUpName(e.target.value)}
+                    placeholder="e.g. Arthur Pendelton"
+                    className="w-full rounded-xl border border-slate-250 bg-slate-50 px-4 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-900 focus:bg-white"
+                    id="signup-name-input"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
+                      Unit No.
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={signUpUnit}
+                      onChange={(e) => setSignUpUnit(e.target.value)}
+                      placeholder="e.g. A-102"
+                      className="w-full rounded-xl border border-slate-250 bg-slate-50 px-4 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-900 focus:bg-white"
+                      id="signup-unit-input"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
+                      Phone (Optional)
+                    </label>
+                    <input
+                      type="tel"
+                      value={signUpPhone}
+                      onChange={(e) => setSignUpPhone(e.target.value)}
+                      placeholder="555-0100"
+                      className="w-full rounded-xl border border-slate-250 bg-slate-50 px-4 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-900 focus:bg-white"
+                      id="signup-phone-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={signUpEmail}
+                    onChange={(e) => setSignUpEmail(e.target.value)}
+                    placeholder="e.g. arthur@example.com"
+                    className="w-full rounded-xl border border-slate-250 bg-slate-50 px-4 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-900 focus:bg-white"
+                    id="signup-email-input"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      value={signUpPass}
+                      onChange={(e) => setSignUpPass(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full rounded-xl border border-slate-250 bg-slate-50 px-4 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-900 focus:bg-white"
+                      id="signup-pass-input"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
+                      Confirm Pass
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      value={signUpConfirmPass}
+                      onChange={(e) => setSignUpConfirmPass(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full rounded-xl border border-slate-250 bg-slate-50 px-4 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-900 focus:bg-white"
+                      id="signup-confirm-input"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-blue-900 hover:bg-blue-800 py-3 text-sm font-semibold text-white shadow transition-colors mt-2"
+                  id="signup-submit-btn"
+                >
+                  <UserPlus className="h-4 w-4 text-amber-400" />
+                  <span>Register Resident Account</span>
+                </button>
+              </form>
             )}
 
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
-                  Condominium Unit No.
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={unitNo}
-                  onChange={(e) => setUnitNo(e.target.value)}
-                  placeholder="e.g. B-204"
-                  className="w-full rounded-xl border border-slate-250 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-blue-900 focus:bg-white"
-                  id="login-unit-input"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
-                  Portal Password
-                </label>
-                <input
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  defaultValue="demo123"
-                  className="w-full rounded-xl border border-slate-250 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-blue-900 focus:bg-white"
-                  id="login-pass-input"
-                />
-              </div>
-
-              <div className="flex items-center justify-between text-xs pt-1">
-                <label className="flex items-center gap-1.5 text-slate-500 cursor-pointer">
-                  <input type="checkbox" defaultChecked className="rounded border-slate-300 text-blue-900" />
-                  <span>Remember Unit</span>
-                </label>
-                <a href="#" className="text-blue-900 font-bold hover:underline">Forgot password?</a>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-slate-950 py-3 text-sm font-semibold text-white shadow hover:bg-slate-900 transition-colors"
-                id="login-submit-btn"
-              >
-                <span>Authorize & Connect</span>
-                <ArrowRight className="h-4 w-4 text-amber-400" />
-              </button>
-            </form>
-
             <div className="rounded-xl bg-blue-50/60 border border-blue-150 p-4 text-xs text-slate-600 leading-normal">
-              <p className="font-semibold text-blue-950">Demo Credentials:</p>
-              <p className="mt-1">
-                Use any unit number (e.g., <span className="font-bold font-mono">B-204</span>) and any password to test. Security controls are pre-authenticated in Sandbox Mode.
-              </p>
+              <p className="font-semibold text-blue-950">Pre-Registered Demonstration Accounts:</p>
+              <div className="mt-1.5 space-y-1 text-[11px]">
+                <p>• Unit <span className="font-bold font-mono">B-204</span> (Arthur Pendelton) — password: <span className="font-bold font-mono">demo123</span></p>
+                <p>• Unit <span className="font-bold font-mono">A-102</span> (Clara Jenkins) — password: <span className="font-bold font-mono">password123</span></p>
+              </div>
             </div>
           </motion.div>
         ) : (
