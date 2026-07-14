@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { 
   KeyRound, DollarSign, Wrench, Hammer, CheckCircle2, 
   UserCheck, LogOut, ArrowRight, Loader2, CreditCard, 
-  FileText, History, Info, AlertTriangle, PenTool, Check, Trash2, UserPlus
+  FileText, History, Info, AlertTriangle, PenTool, Check, Trash2, UserPlus,
+  ExternalLink
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MaintenanceRequest, ArcRequest } from '../types';
@@ -651,7 +652,7 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
               
               {/* Left 2 Columns: Sub-form or dashboard */}
-              <div className="lg:col-span-2">
+              <div className={portalView === 'maintenance' ? "lg:col-span-3" : "lg:col-span-2"}>
                 <AnimatePresence mode="wait">
                   {portalView === 'dues' && (
                     <motion.div
@@ -828,103 +829,33 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
                       exit={{ opacity: 0, y: -10 }}
                       className="space-y-6"
                     >
-                      {/* Submit Ticket Form */}
-                      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-                        <div className="border-b border-slate-150 pb-3">
-                          <h4 className="font-serif font-bold text-slate-900 text-base flex items-center gap-2">
-                            <Wrench className="h-5 w-5 text-indigo-600" />
-                            Submit New Maintenance Request
+                      {/* External Portal Link Box */}
+                      <div className="rounded-2xl border border-slate-200 bg-white p-8 sm:p-10 shadow-sm text-center space-y-6 max-w-2xl mx-auto">
+                        <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm">
+                          <Wrench className="h-8 w-8" />
+                        </div>
+                        <div className="space-y-2.5">
+                          <h4 className="font-serif font-bold text-slate-900 text-xl">
+                            Report Maintenance Issue
                           </h4>
-                          <p className="text-xs text-slate-500 mt-1">
-                            Report issues with common buildings, hallways, pool, pond walks, or security locks.
+                          <p className="text-sm text-slate-500 leading-relaxed max-w-md mx-auto">
+                            To log a new maintenance issue, track current work order progress, or review scheduled property upkeep, please visit our designated community management service portal.
                           </p>
                         </div>
-
-                        <form onSubmit={handleMntSubmit} className="space-y-4">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                              <label className="text-xs text-slate-500 font-semibold">Incident Category</label>
-                              <select
-                                value={mntCategory}
-                                onChange={(e) => setMntCategory(e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-850 focus:outline-none focus:border-blue-900"
-                              >
-                                <option>Common Plumbing & Exterior Leak</option>
-                                <option>Landscaping & Tree Trimming</option>
-                                <option>Common Lighting & Electrical</option>
-                                <option>Pool & Clubroom Defect</option>
-                                <option>Soffit, Gutter or Shingle Fault</option>
-                                <option>Sidewalk Crack or Paving Defect</option>
-                              </select>
-                            </div>
-
-                            <div className="space-y-1">
-                              <label className="text-xs text-slate-500 font-semibold">Urgency Level</label>
-                              <select
-                                value={mntUrgency}
-                                onChange={(e) => setMntUrgency(e.target.value as any)}
-                                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-850 focus:outline-none focus:border-blue-900"
-                              >
-                                <option value="low">Low (General Request)</option>
-                                <option value="medium">Medium (Routine Service)</option>
-                                <option value="high">High (Needs board attention)</option>
-                                <option value="emergency">Emergency (Immediate hazard)</option>
-                              </select>
-                            </div>
-                          </div>
-
-                          <div className="space-y-1">
-                            <label className="text-xs text-slate-500 font-semibold">Exact Location on Property</label>
-                            <input
-                              type="text"
-                              required
-                              value={mntLocation}
-                              onChange={(e) => setMntLocation(e.target.value)}
-                              placeholder="e.g. Next to dumpster B or balcony of unit C-202"
-                              className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-blue-900"
-                            />
-                          </div>
-
-                          <div className="space-y-1">
-                            <label className="text-xs text-slate-500 font-semibold">Problem Description</label>
-                            <textarea
-                              required
-                              rows={3}
-                              value={mntDesc}
-                              onChange={(e) => setMntDesc(e.target.value)}
-                              placeholder="Describe the issue in detail to assist our vendor contractors..."
-                              className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-blue-900"
-                            />
-                          </div>
-
-                          <div className="space-y-1">
-                            <label className="text-xs text-slate-500 font-semibold">Upload Photo / Proof of Damage (Optional)</label>
-                            <DocumentUploader
-                              label="Drag & drop a photo/invoice here, or click to browse"
-                              acceptedTypes=".png,.jpg,.jpeg,.pdf"
-                              onFileSelected={(file) => setMntAttachedFile({ name: file.name, size: file.size })}
-                              onFileCleared={() => setMntAttachedFile(null)}
-                            />
-                          </div>
-
-                          <button
-                            type="submit"
-                            disabled={isSubmittingMnt}
-                            className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-slate-950 py-3 text-xs font-bold text-white hover:bg-slate-900 transition-all"
+                        <div className="pt-2">
+                          <a
+                            href="https://acs.cincwebaxis.com/account/loginmodernthemes"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 text-sm font-semibold shadow-lg shadow-indigo-600/10 transition-all hover:scale-[1.02] cursor-pointer"
                           >
-                            {isSubmittingMnt ? (
-                              <>
-                                <Loader2 className="h-4 w-4 animate-spin text-white" />
-                                <span>Logging ticket...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Wrench className="h-4 w-4 text-amber-400" />
-                                <span>Submit Maintenance Ticket</span>
-                              </>
-                            )}
-                          </button>
-                        </form>
+                            <span>Access CINC Maintenance Portal</span>
+                            <ExternalLink className="h-4.5 w-4.5" />
+                          </a>
+                        </div>
+                        <div className="pt-4 border-t border-slate-100 text-[11px] text-slate-400">
+                          You will be securely redirected to our third-party property management gateway.
+                        </div>
                       </div>
                     </motion.div>
                   )}
@@ -1089,47 +1020,7 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
                   </div>
                 )}
 
-                {portalView === 'maintenance' && (
-                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-                    <h4 className="font-serif font-bold text-slate-900 text-base flex items-center gap-1.5 border-b border-slate-100 pb-2">
-                      <Wrench className="h-4.5 w-4.5 text-indigo-600" />
-                      My Active Tickets ({maintenanceTickets.length})
-                    </h4>
-                    <div className="space-y-4">
-                      {maintenanceTickets.map((ticket) => (
-                        <div key={ticket.id} className="rounded-xl border border-slate-150 p-3 bg-slate-50/60 space-y-2 text-xs">
-                          <div className="flex items-center justify-between">
-                            <span className="font-mono font-bold text-[10px] text-slate-400">{ticket.id}</span>
-                            <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
-                              ticket.status === 'Resolved'
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : ticket.status === 'In Progress'
-                                ? 'bg-amber-100 text-amber-850'
-                                : 'bg-slate-200 text-slate-600'
-                            }`}>
-                              {ticket.status}
-                            </span>
-                          </div>
-                          <h5 className="font-semibold text-slate-800 leading-tight">{ticket.category}</h5>
-                          <p className="text-slate-500 leading-normal line-clamp-2">{ticket.description}</p>
-                          {ticket.attachedFile && (
-                            <div className="flex items-center gap-1.5 bg-white border border-slate-150 rounded-lg px-2 py-1 text-[10px] text-slate-600 font-medium mt-1">
-                              <FileText className="h-3.5 w-3.5 text-blue-900 shrink-0" />
-                              <span className="truncate max-w-[150px] font-bold text-slate-800">{ticket.attachedFile.name}</span>
-                              <span className="text-slate-400 font-mono text-[9px]">({ticket.attachedFile.size})</span>
-                            </div>
-                          )}
-                          <div className="pt-1.5 border-t border-slate-200/50">
-                            <p className="text-[10px] font-mono text-slate-400">Latest Log:</p>
-                            <p className="text-[10px] font-medium text-slate-600 italic mt-0.5">
-                              "{ticket.updates[ticket.updates.length - 1]?.message}"
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+
 
                 {portalView === 'arc' && (
                   <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
