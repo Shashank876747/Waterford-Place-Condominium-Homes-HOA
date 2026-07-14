@@ -67,18 +67,18 @@ export default function Header({ activeTab, setActiveTab, setSearchQuery }: Head
         <div className="flex h-20 items-center justify-between">
           {/* Logo Brand */}
           <div 
-            className="flex cursor-pointer items-center space-x-3" 
+            className="flex cursor-pointer items-center space-x-3 bg-[#f5efe6] hover:bg-[#efe8da] border border-[#e5dac4] px-4 py-1.5 rounded-2xl shadow-inner transition-all duration-200" 
             onClick={() => setActiveTab('home')}
             id="header-brand"
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-900 to-indigo-950 text-amber-400 shadow-md">
-              <Shield className="h-6 w-6" strokeWidth={1.8} />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#4a3e3d] to-[#2b1f1e] text-amber-400 shadow-sm shrink-0">
+              <Shield className="h-5 w-5" strokeWidth={1.8} />
             </div>
             <div>
-              <h1 className="font-serif text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
+              <h1 className="font-serif text-sm sm:text-base font-extrabold tracking-tight text-[#3e3223] leading-none">
                 {siteMetadata.name}
               </h1>
-              <p className="text-xs font-mono font-medium tracking-widest uppercase text-slate-500">
+              <p className="text-[9px] font-mono font-bold tracking-widest uppercase text-[#8c7a65] mt-0.5">
                 {siteMetadata.subtitle}
               </p>
             </div>

@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MaintenanceRequest, ArcRequest } from '../types';
+import DocumentUploader from './DocumentUploader';
 
 interface PortalTabProps {
   initialView?: 'dues' | 'maintenance' | 'arc';
@@ -82,6 +83,7 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
   const [mntDesc, setMntDesc] = useState('');
   const [mntUrgency, setMntUrgency] = useState<'low' | 'medium' | 'high' | 'emergency'>('medium');
   const [mntLocation, setMntLocation] = useState('');
+  const [mntAttachedFile, setMntAttachedFile] = useState<{ name: string; size: string } | null>(null);
   const [isSubmittingMnt, setIsSubmittingMnt] = useState(false);
 
   // ARC requests state
@@ -105,6 +107,7 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
   const [arcMaterials, setArcMaterials] = useState('');
   const [arcContractor, setArcContractor] = useState('');
   const [arcCost, setArcCost] = useState('');
+  const [arcAttachedFile, setArcAttachedFile] = useState<{ name: string; size: string } | null>(null);
   const [isSubmittingArc, setIsSubmittingArc] = useState(false);
 
   // Handle mock resident login
@@ -177,13 +180,15 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
         status: 'Received',
         updates: [
           { date: today, message: 'Ticket registered successfully. Assigned to Elite PM Operations desk.' }
-        ]
+        ],
+        attachedFile: mntAttachedFile ? { name: mntAttachedFile.name, size: mntAttachedFile.size } : undefined
       };
 
       setMaintenanceTickets((prev) => [newTicket, ...prev]);
       setIsSubmittingMnt(false);
       setMntDesc('');
       setMntLocation('');
+      setMntAttachedFile(null);
       alert(`Success! Maintenance Ticket ${newTicketId} has been successfully dispatched to landscaping & facilities.`);
     }, 1200);
   };
@@ -210,7 +215,8 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
         dimensions: 'Per Specifications',
         status: 'Pending Review',
         submittedAt: today,
-        estimatedCost: arcCost ? `$${arcCost}` : 'Not Specified'
+        estimatedCost: arcCost ? `$${arcCost}` : 'Not Specified',
+        attachedFile: arcAttachedFile ? { name: arcAttachedFile.name, size: arcAttachedFile.size } : undefined
       };
 
       setArcRequests((prev) => [newArc, ...prev]);
@@ -220,6 +226,7 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
       setArcMaterials('');
       setArcContractor('');
       setArcCost('');
+      setArcAttachedFile(null);
       alert(`Success! Architectural Alteration Plan ${newArcId} has been registered and scheduled for committee review.`);
     }, 1500);
   };
@@ -232,7 +239,7 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
           Co-Owner Resident Portal
         </h2>
         <p className="text-sm sm:text-base text-slate-500 leading-relaxed">
-          The secure HOA command center. Log in to pay monthly assessments, file formal Architectural Review (ARC) projects, report landscaping/grounds issues, or review past statement logs.
+          The secure HOA command center. Log in to pay monthly assessments, file formal exterior alteration requests, report landscaping/grounds issues, or review past statement logs.
         </p>
       </section>
 
@@ -351,7 +358,7 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
                 {[
                   { name: 'Dues & Billing', id: 'dues', icon: DollarSign },
                   { name: 'Maintenance Issues', id: 'maintenance', icon: Wrench },
-                  { name: 'ARC Project Form', id: 'arc', icon: PenTool },
+                  { name: 'Exterior Alterations', id: 'arc', icon: PenTool },
                 ].map((sec) => {
                   const Icon = sec.icon;
                   return (
@@ -629,6 +636,16 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
                             />
                           </div>
 
+                          <div className="space-y-1">
+                            <label className="text-xs text-slate-500 font-semibold">Upload Photo / Proof of Damage (Optional)</label>
+                            <DocumentUploader
+                              label="Drag & drop a photo/invoice here, or click to browse"
+                              acceptedTypes=".png,.jpg,.jpeg,.pdf"
+                              onFileSelected={(file) => setMntAttachedFile({ name: file.name, size: file.size })}
+                              onFileCleared={() => setMntAttachedFile(null)}
+                            />
+                          </div>
+
                           <button
                             type="submit"
                             disabled={isSubmittingMnt}
@@ -664,7 +681,7 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
                         <div className="border-b border-slate-150 pb-3">
                           <h4 className="font-serif font-bold text-slate-900 text-base flex items-center gap-2">
                             <Hammer className="h-5 w-5 text-purple-600" />
-                            Submit Architectural Control (ARC) Application
+                            Submit Exterior Alteration Request
                           </h4>
                           <p className="text-xs text-slate-500 mt-1">
                             Submit plans for windows, exterior doors, patio tiling, or balcony shades for Board of Directors review.
@@ -748,6 +765,16 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
                             />
                           </div>
 
+                          <div className="space-y-1">
+                            <label className="text-xs text-slate-500 font-semibold">Upload Blueprint / Drawing Specifications (Optional)</label>
+                            <DocumentUploader
+                              label="Drag & drop blueprint drawings, contractor quotes or specs, or click to browse"
+                              acceptedTypes=".pdf,.docx,.doc,.xlsx,.xls,.png,.jpg,.jpeg"
+                              onFileSelected={(file) => setArcAttachedFile({ name: file.name, size: file.size })}
+                              onFileCleared={() => setArcAttachedFile(null)}
+                            />
+                          </div>
+
                           <button
                             type="submit"
                             disabled={isSubmittingArc}
@@ -761,7 +788,7 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
                             ) : (
                               <>
                                 <Hammer className="h-4 w-4 text-amber-400" />
-                                <span>File Formal ARC Application</span>
+                                <span>File Exterior Alteration Request</span>
                               </>
                             )}
                           </button>
@@ -824,6 +851,13 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
                           </div>
                           <h5 className="font-semibold text-slate-800 leading-tight">{ticket.category}</h5>
                           <p className="text-slate-500 leading-normal line-clamp-2">{ticket.description}</p>
+                          {ticket.attachedFile && (
+                            <div className="flex items-center gap-1.5 bg-white border border-slate-150 rounded-lg px-2 py-1 text-[10px] text-slate-600 font-medium mt-1">
+                              <FileText className="h-3.5 w-3.5 text-blue-900 shrink-0" />
+                              <span className="truncate max-w-[150px] font-bold text-slate-800">{ticket.attachedFile.name}</span>
+                              <span className="text-slate-400 font-mono text-[9px]">({ticket.attachedFile.size})</span>
+                            </div>
+                          )}
                           <div className="pt-1.5 border-t border-slate-200/50">
                             <p className="text-[10px] font-mono text-slate-400">Latest Log:</p>
                             <p className="text-[10px] font-medium text-slate-600 italic mt-0.5">
@@ -840,7 +874,7 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
                   <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
                     <h4 className="font-serif font-bold text-slate-900 text-base flex items-center gap-1.5 border-b border-slate-100 pb-2">
                       <Hammer className="h-4.5 w-4.5 text-purple-600" />
-                      My ARC Applications ({arcRequests.length})
+                      My Alteration Requests ({arcRequests.length})
                     </h4>
                     <div className="space-y-4">
                       {arcRequests.map((arc) => (
@@ -859,6 +893,13 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
                           </div>
                           <h5 className="font-semibold text-slate-800 leading-tight">{arc.projectTitle}</h5>
                           <p className="text-slate-500 line-clamp-2">{arc.description}</p>
+                          {arc.attachedFile && (
+                            <div className="flex items-center gap-1.5 bg-white border border-slate-150 rounded-lg px-2 py-1 text-[10px] text-slate-600 font-medium mt-1">
+                              <FileText className="h-3.5 w-3.5 text-purple-600 shrink-0" />
+                              <span className="truncate max-w-[150px] font-bold text-slate-800">{arc.attachedFile.name}</span>
+                              <span className="text-slate-400 font-mono text-[9px]">({arc.attachedFile.size})</span>
+                            </div>
+                          )}
                           <div className="flex items-center justify-between pt-1 text-[10px] text-slate-400">
                             <span>Filed: {arc.submittedAt}</span>
                             <span>Est: {arc.estimatedCost}</span>

@@ -88,7 +88,7 @@ export default function Footer({ setActiveTab }: FooterProps) {
                   className="flex items-center hover:text-amber-400 transition-colors text-left cursor-pointer"
                 >
                   <FileText className="h-4 w-4 mr-2 text-amber-500/80" />
-                  <span>ARC Approval Request Form</span>
+                  <span>Exterior Alteration Request Form</span>
                 </button>
               </li>
               <li>

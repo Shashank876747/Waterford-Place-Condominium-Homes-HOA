@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
 import { 
-  HelpCircle, Search, ChevronDown, ChevronUp, Info, 
-  ShieldAlert, BadgeInfo 
+  HelpCircle, Search, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { FaqItem } from '../types';
 import { useSiteData } from '../context/SiteDataContext';
 
 export default function FaqTab() {
   const { faqs } = useSiteData();
   const [activeCategory, setActiveCategory] = useState<'all' | 'dues' | 'parking' | 'pets' | 'trash' | 'amenities' | 'rules'>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [expandedId, setExpandedId] = useState<string | null>('faq-1'); // Default open first FAQ
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const categories = [
     { name: 'All FAQs', id: 'all' },
@@ -34,8 +32,8 @@ export default function FaqTab() {
 
   const filteredFaqs = faqs.filter((faq) => {
     const matchesCategory = activeCategory === 'all' || faq.category === activeCategory;
-    const matchesSearch = 
-      faq.question.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch =
+      faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
       faq.answer.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch;
   });
@@ -44,49 +42,53 @@ export default function FaqTab() {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  // Helper to highlight search keywords
-  const highlightText = (text: string, search: string) => {
-    if (!search.trim()) return text;
-    const regex = new RegExp(`(${search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi');
+  // Helper to highlight matching text
+  const highlightText = (text: string, highlight: string) => {
+    if (!highlight.trim()) {
+      return <span>{text}</span>;
+    }
+    const regex = new RegExp(`(${highlight.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi');
     const parts = text.split(regex);
-    return parts.map((part, i) => 
-      regex.test(part) ? (
-        <span key={i} className="bg-yellow-100 text-slate-900 font-semibold rounded px-0.5">{part}</span>
-      ) : (
-        part
-      )
+    return (
+      <span>
+        {parts.map((part, i) =>
+          regex.test(part) ? (
+            <mark key={i} className="bg-amber-100 text-amber-950 px-0.5 rounded font-medium">
+              {part}
+            </mark>
+          ) : (
+            part
+          )
+        )}
+      </span>
     );
   };
 
   return (
     <div className="space-y-12" id="faq-view-container">
-      {/* Page Title header */}
+      {/* Intro Header */}
       <section className="text-center max-w-3xl mx-auto space-y-4">
-        <h2 className="font-serif text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+        <h2 className="font-serif text-3xl font-bold tracking-tight text-[#3e3223] sm:text-4xl bg-[#f5efe6] inline-block px-6 py-2 rounded-2xl border border-[#e5dac4] shadow-sm">
           Frequently Asked Questions
         </h2>
         <p className="text-sm sm:text-base text-slate-500 leading-relaxed">
-          Need quick answers regarding trash days, pet weights, clubhouse rental deposits, or auto-debit payments? Browse our categorized community guide or use the search bar.
+          Quickly find answers regarding assessments, towing policies, trash schedules, and Architectural Review Committee approvals. Filter by category or search below.
         </p>
       </section>
 
-      {/* Categories & Search block */}
+      {/* Categories & Search Panel */}
       <section className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 pb-5">
-          {/* Categories list */}
-          <div className="flex flex-wrap gap-1.5" id="faq-category-filters">
+        <div className="flex flex-col lg:flex-row gap-4 justify-between items-center bg-white border border-slate-150 p-4 rounded-2xl shadow-sm">
+          {/* Tabs */}
+          <div className="flex flex-wrap gap-1.5 w-full lg:w-auto">
             {categories.map((cat) => (
               <button
                 key={cat.id}
-                onClick={() => {
-                  setActiveCategory(cat.id as any);
-                  setExpandedId(null); // Close active when changing category
-                }}
-                id={`faq-cat-btn-${cat.id}`}
-                className={`rounded-xl px-4 py-2.5 text-xs font-bold transition-all ${
+                onClick={() => setActiveCategory(cat.id as any)}
+                className={`rounded-xl px-4 py-2 text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                   activeCategory === cat.id
-                    ? 'bg-blue-900 text-white shadow-md'
-                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    ? 'bg-blue-900 text-white shadow-sm'
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
                 }`}
               >
                 {cat.name}
@@ -94,61 +96,68 @@ export default function FaqTab() {
             ))}
           </div>
 
-          {/* Search bar input */}
-          <div className="relative max-w-sm w-full">
-            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          {/* Search bar */}
+          <div className="relative w-full lg:w-80">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
+              placeholder="Search FAQs..."
               value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setExpandedId(null); // Reset expand during search for better view
-              }}
-              placeholder="Search FAQ answers..."
-              className="w-full rounded-xl border border-slate-200 pl-10 pr-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 bg-white focus:outline-none focus:border-blue-900"
-              id="faq-search-bar"
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-blue-900/40 bg-slate-50 focus:bg-white transition-all shadow-inner"
             />
           </div>
         </div>
 
-        {/* Accordion list */}
-        <div className="max-w-4xl mx-auto space-y-3" id="faq-accordion-list">
+        {/* FAQs Accordion Grid */}
+        <div className="max-w-4xl mx-auto space-y-4" id="faq-accordion-container">
           {filteredFaqs.map((faq) => {
             const isOpen = expandedId === faq.id;
 
             return (
               <div
                 key={faq.id}
-                className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
+                className={`rounded-2xl border transition-all overflow-hidden ${
                   isOpen 
-                    ? 'border-blue-200 bg-blue-50/10 shadow-sm' 
-                    : 'border-slate-200 bg-white hover:border-slate-300 shadow-xs'
+                    ? 'bg-blue-50/10 border-blue-200 shadow-sm' 
+                    : 'bg-white border-slate-150 hover:border-slate-300'
                 }`}
               >
-                {/* Accordion trigger header */}
-                <button
-                  onClick={() => toggleExpand(faq.id)}
-                  className="flex w-full items-center justify-between p-5 text-left transition-colors"
-                  id={`faq-trigger-${faq.id}`}
-                >
-                  <div className="flex-1 pr-4">
-                    <div className="flex items-center space-x-2 mb-1.5">
-                      <span className="rounded-full bg-slate-100 text-slate-500 font-mono text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 border border-slate-200/40">
-                        {categoryLabels[faq.category]}
-                      </span>
+                {/* Header panel */}
+                <div className="flex items-center justify-between p-5 gap-4">
+                  <button
+                    onClick={() => toggleExpand(faq.id)}
+                    className="flex-1 text-left flex gap-3 items-start cursor-pointer focus:outline-none group"
+                  >
+                    <div className={`rounded-lg p-2 border shrink-0 mt-0.5 transition-colors ${
+                      isOpen ? 'bg-blue-900 text-white border-blue-900' : 'bg-slate-50 text-slate-400 border-slate-100 group-hover:bg-slate-100'
+                    }`}>
+                      <HelpCircle className="h-4 w-4" />
                     </div>
-                    <h4 className="font-serif font-bold text-slate-900 text-sm sm:text-base leading-snug">
-                      {highlightText(faq.question, searchTerm)}
-                    </h4>
-                  </div>
-                  <div className="ml-2 flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-400 transition-transform">
+
+                    <div className="space-y-1.5 flex-1 min-w-0">
+                      <span className="font-mono text-[9px] font-bold text-slate-400 uppercase tracking-widest block">
+                        {categoryLabels[faq.category] || faq.category}
+                      </span>
+                      <h4 className={`font-serif font-bold text-sm sm:text-base leading-snug transition-colors ${
+                        isOpen ? 'text-blue-950' : 'text-slate-800 group-hover:text-slate-950'
+                      }`}>
+                        {highlightText(faq.question, searchTerm)}
+                      </h4>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => toggleExpand(faq.id)}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-400 hover:bg-slate-100 transition-transform"
+                  >
                     {isOpen ? (
                       <ChevronUp className="h-4 w-4 text-blue-900" />
                     ) : (
                       <ChevronDown className="h-4 w-4 text-slate-500" />
                     )}
-                  </div>
-                </button>
+                  </button>
+                </div>
 
                 {/* Expanded Answer Content panel */}
                 <AnimatePresence initial={false}>
@@ -159,7 +168,7 @@ export default function FaqTab() {
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.2, ease: 'easeInOut' }}
                     >
-                      <div className="border-t border-slate-100 p-5 bg-white text-xs sm:text-sm text-slate-600 leading-relaxed space-y-3">
+                      <div className="border-t border-slate-100 p-5 bg-white text-xs sm:text-sm text-slate-650 leading-relaxed space-y-3">
                         <p>{highlightText(faq.answer, searchTerm)}</p>
                       </div>
                     </motion.div>
@@ -171,7 +180,7 @@ export default function FaqTab() {
 
           {filteredFaqs.length === 0 && (
             <div className="py-12 text-center text-slate-500 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-              No matching FAQs found for your current filter or search criteria. Try a simpler keyword.
+              No frequently asked questions registered yet. Add some FAQs in the Edit Site dashboard!
             </div>
           )}
         </div>
@@ -187,7 +196,7 @@ export default function FaqTab() {
             Have a question not listed here?
           </h3>
           <p className="text-xs text-slate-600 leading-normal">
-            If you need clarification regarding individual property guidelines, lease registrations, or standard procedures, don't hesitate to reach out to Jennifer Sterling at Elite Management.
+            If you need clarification regarding individual property guidelines, lease registrations, or standard procedures, don't hesitate to reach out to our management representatives.
           </p>
         </div>
 
@@ -196,7 +205,7 @@ export default function FaqTab() {
             const contactBtn = document.getElementById('nav-btn-contact');
             if (contactBtn) contactBtn.click();
           }}
-          className="rounded-xl bg-slate-900 hover:bg-slate-800 font-bold text-white px-5 py-3 text-xs shadow-md shrink-0 transition-colors"
+          className="rounded-xl bg-slate-900 hover:bg-slate-800 font-bold text-white px-5 py-3 text-xs shadow-md shrink-0 transition-colors cursor-pointer"
         >
           Contact Management Office
         </button>

@@ -62,6 +62,7 @@ export interface MaintenanceRequest {
   submittedAt: string;
   status: 'Received' | 'In Progress' | 'Scheduled' | 'Resolved';
   updates: { date: string; message: string }[];
+  attachedFile?: { name: string; size: string };
 }
 
 export interface ArcRequest {
@@ -75,4 +76,14 @@ export interface ArcRequest {
   status: 'Pending Review' | 'Under Board Review' | 'Approved' | 'Approved with Conditions' | 'Denied';
   submittedAt: string;
   estimatedCost: string;
+  attachedFile?: { name: string; size: string };
 }
+
+export interface CommunityLink {
+  id: string;
+  name: string;
+  url: string;
+  desc: string;
+  category: 'municipal' | 'safety' | 'utility' | 'general';
+}
+

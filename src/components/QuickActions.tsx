@@ -50,7 +50,7 @@ export default function QuickActions({ onNavigate }: QuickActionsProps) {
       action: () => handleAction('portal', 'dues'),
     },
     {
-      label: 'Submit ARC Request',
+      label: 'Submit Exterior Alteration',
       description: 'Apply for windows, door, or patio changes.',
       icon: PenTool,
       color: 'bg-purple-50 text-purple-600 border-purple-100',

@@ -1,24 +1,28 @@
 import React, { useState } from 'react';
 import { 
   Settings, Shield, Plus, Edit2, Trash2, Check, RefreshCw, 
-  Sparkles, FileText, Calendar, Users, HelpCircle, LayoutGrid, Info 
+  Sparkles, FileText, Calendar, Users, HelpCircle, LayoutGrid, Info,
+  ExternalLink, Camera
 } from 'lucide-react';
 import { useSiteData, SiteMetadata } from '../context/SiteDataContext';
-import { Announcement, BoardMember, DocumentItem, CalendarEvent, FaqItem } from '../types';
+import { Announcement, BoardMember, DocumentItem, CalendarEvent, FaqItem, CommunityLink } from '../types';
+import DocumentUploader from './DocumentUploader';
 
 export default function EditSiteTab() {
   const {
     siteMetadata, updateSiteMetadata,
-    announcements, addAnnouncement, updateAnnouncement, deleteAnnouncement,
+    announcements, addAnnouncement, updateAnnouncement, deleteAnnouncement, clearAllAnnouncements,
     boardMembers, addBoardMember, updateBoardMember, deleteBoardMember,
-    documents, addDocument, updateDocument, deleteDocument,
+    documents, addDocument, updateDocument, deleteDocument, clearAllDocuments,
     events, addEvent, updateEvent, deleteEvent,
     faqs, addFaq, updateFaq, deleteFaq,
+    communityPhotos, addCommunityPhoto, deleteCommunityPhoto,
+    communityLinks, addCommunityLink, deleteCommunityLink,
     isEditMode, setIsEditMode,
     resetAllToDefault
   } = useSiteData();
 
-  const [activeSubSection, setActiveSubSection] = useState<'metadata' | 'announcements' | 'board' | 'events' | 'documents' | 'faqs'>('metadata');
+  const [activeSubSection, setActiveSubSection] = useState<'metadata' | 'announcements' | 'board' | 'events' | 'documents' | 'faqs' | 'links' | 'photos'>('metadata');
 
   // Metadata Forms states
   const [metaForm, setMetaForm] = useState<SiteMetadata>({ ...siteMetadata });
@@ -87,6 +91,28 @@ export default function EditSiteTab() {
     addFaq(newFaq);
     setNewFaq({ question: '', answer: '', category: 'rules' });
     alert('FAQ published!');
+  };
+
+  // Link form states
+  const [newLinkAdmin, setNewLinkAdmin] = useState({ name: '', url: '', desc: '', category: 'general' as CommunityLink['category'] });
+
+  // Photo form states
+  const [newPhotoAdmin, setNewPhotoAdmin] = useState({ url: '', title: '' });
+
+  const handleAddLinkAdmin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newLinkAdmin.name || !newLinkAdmin.url) return;
+    addCommunityLink(newLinkAdmin);
+    setNewLinkAdmin({ name: '', url: '', desc: '', category: 'general' });
+    alert('Public Link shortcut registered successfully!');
+  };
+
+  const handleAddPhotoAdmin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPhotoAdmin.url || !newPhotoAdmin.title) return;
+    addCommunityPhoto(newPhotoAdmin);
+    setNewPhotoAdmin({ url: '', title: '' });
+    alert('Photo added to community gallery!');
   };
 
   return (
@@ -163,6 +189,8 @@ export default function EditSiteTab() {
             { id: 'events', label: 'Upcoming Events', icon: Calendar },
             { id: 'documents', label: 'Documents Room', icon: FileText },
             { id: 'faqs', label: 'FAQ Directory', icon: HelpCircle },
+            { id: 'links', label: 'Public Links', icon: ExternalLink },
+            { id: 'photos', label: 'Gallery Photos', icon: Camera },
           ].map((sec) => {
             const Icon = sec.icon;
             const isSelected = activeSubSection === sec.id;
@@ -375,7 +403,23 @@ export default function EditSiteTab() {
 
               {/* Feed List */}
               <div className="space-y-3">
-                <h4 className="font-serif font-bold text-slate-800 text-sm">Active Feed Bulletins ({announcements.length})</h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="font-serif font-bold text-slate-800 text-sm">Active Feed Bulletins ({announcements.length})</h4>
+                  {announcements.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (confirm('Are you sure you want to delete every announcement? This will clear all logged community bulletins.')) {
+                          clearAllAnnouncements();
+                        }
+                      }}
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Clear All Announcements
+                    </button>
+                  )}
+                </div>
                 <div className="space-y-2">
                   {announcements.map((ann) => (
                     <div key={ann.id} className="rounded-xl border border-slate-150 p-4 bg-white flex items-start justify-between gap-4">
@@ -648,6 +692,33 @@ export default function EditSiteTab() {
               <form onSubmit={handleAddDocument} className="rounded-xl border border-slate-150 p-4 bg-slate-50/50 space-y-4">
                 <h4 className="font-serif font-bold text-slate-850 text-sm">Log New Document Card</h4>
                 
+                {/* Drag & Drop File Upload Zone */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono uppercase font-bold text-slate-400">Upload File (Drag & Drop or Click)</label>
+                  <DocumentUploader
+                    onFileSelected={(file) => {
+                      const cleanTitle = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+                      const formattedTitle = cleanTitle.replace(/[_-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                      setNewDoc({
+                        ...newDoc,
+                        title: formattedTitle,
+                        fileSize: file.size,
+                        fileType: file.type as any,
+                        code: `DOC-${file.type}-${Math.floor(Math.random() * 900 + 100)}`
+                      });
+                    }}
+                    onFileCleared={() => {
+                      setNewDoc({
+                        ...newDoc,
+                        title: '',
+                        fileSize: '1.2 MB',
+                        fileType: 'PDF',
+                        code: 'SEC-1.0'
+                      });
+                    }}
+                  />
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-[10px] font-mono uppercase font-bold text-slate-400">Document Title</label>
@@ -734,7 +805,23 @@ export default function EditSiteTab() {
 
               {/* Documents List */}
               <div className="space-y-3">
-                <h4 className="font-serif font-bold text-slate-800 text-sm">Active Logged Files ({documents.length})</h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="font-serif font-bold text-slate-800 text-sm">Active Logged Files ({documents.length})</h4>
+                  {documents.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (confirm('Are you sure you want to delete every document? This will clear all logged community files.')) {
+                          clearAllDocuments();
+                        }
+                      }}
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Clear All Documents
+                    </button>
+                  )}
+                </div>
                 <div className="space-y-2">
                   {documents.map((doc) => (
                     <div key={doc.id} className="rounded-xl border border-slate-150 p-4 bg-white flex items-start justify-between gap-4">
@@ -843,6 +930,183 @@ export default function EditSiteTab() {
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Section 7: Public Links */}
+          {activeSubSection === 'links' && (
+            <div className="space-y-8">
+              <div className="border-b border-slate-100 pb-3">
+                <h3 className="font-serif font-bold text-slate-900 text-lg">Manage Public Resource Links</h3>
+                <p className="text-xs text-slate-500 mt-1">Add or remove direct shortcuts to Smyrna municipal or utility portals.</p>
+              </div>
+
+              {/* Add Link Form */}
+              <form onSubmit={handleAddLinkAdmin} className="rounded-xl border border-slate-150 p-4 bg-slate-50/50 space-y-4">
+                <h4 className="font-serif font-bold text-slate-850 text-sm">Add New Resource Link</h4>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono uppercase font-bold text-slate-400">Resource Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={newLinkAdmin.name}
+                      onChange={e => setNewLinkAdmin({ ...newLinkAdmin, name: e.target.value })}
+                      placeholder="e.g. Smyrna Library"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-sans text-slate-900"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono uppercase font-bold text-slate-400">Category / Icon Type</label>
+                    <select
+                      value={newLinkAdmin.category}
+                      onChange={e => setNewLinkAdmin({ ...newLinkAdmin, category: e.target.value as any })}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-sans text-slate-900"
+                    >
+                      <option value="municipal">Municipal / City Services</option>
+                      <option value="safety">Public Safety / Police</option>
+                      <option value="utility">Utility / Grid</option>
+                      <option value="general">General / Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono uppercase font-bold text-slate-400">Redirect URL</label>
+                  <input
+                    type="url"
+                    required
+                    value={newLinkAdmin.url}
+                    onChange={e => setNewLinkAdmin({ ...newLinkAdmin, url: e.target.value })}
+                    placeholder="https://example.com"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-sans text-slate-900"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono uppercase font-bold text-slate-400">Shortcut Description</label>
+                  <textarea
+                    rows={2}
+                    value={newLinkAdmin.desc}
+                    onChange={e => setNewLinkAdmin({ ...newLinkAdmin, desc: e.target.value })}
+                    placeholder="Provide a brief explanation of what residents can find here..."
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-sans text-slate-900"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="rounded-xl bg-slate-900 text-white font-bold text-xs px-4 py-2.5 hover:bg-slate-800 transition-colors flex items-center gap-1.5"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>Log Shortcut Link</span>
+                </button>
+              </form>
+
+              {/* Links List */}
+              <div className="space-y-3">
+                <h4 className="font-serif font-bold text-slate-800 text-sm">Active Resources Links ({communityLinks.length})</h4>
+                <div className="space-y-2">
+                  {communityLinks.map((link) => (
+                    <div key={link.id} className="rounded-xl border border-slate-150 p-4 bg-white flex items-start justify-between gap-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h5 className="font-semibold text-slate-900 text-sm">{link.name}</h5>
+                          <span className="text-[10px] font-mono bg-slate-100 text-slate-550 px-1.5 rounded uppercase">{link.category}</span>
+                        </div>
+                        <p className="text-xs text-slate-500 leading-normal line-clamp-1">{link.desc}</p>
+                        <p className="text-[10px] text-slate-400 truncate max-w-sm sm:max-w-md">{link.url}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (confirm(`Delete resource link "${link.name}"?`)) {
+                            deleteCommunityLink(link.id);
+                          }
+                        }}
+                        className="p-1.5 rounded hover:bg-rose-50 text-rose-600 shrink-0"
+                        title="Delete Link"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Section 8: Gallery Photos */}
+          {activeSubSection === 'photos' && (
+            <div className="space-y-8">
+              <div className="border-b border-slate-100 pb-3">
+                <h3 className="font-serif font-bold text-slate-900 text-lg">Manage Community Photo Gallery</h3>
+                <p className="text-xs text-slate-500 mt-1">Add, update, or remove photographic scenes displayed in the public gallery.</p>
+              </div>
+
+              {/* Add Photo Form */}
+              <form onSubmit={handleAddPhotoAdmin} className="rounded-xl border border-slate-150 p-4 bg-slate-50/50 space-y-4">
+                <h4 className="font-serif font-bold text-slate-850 text-sm">Add New Photo Card</h4>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono uppercase font-bold text-slate-400">Photo Title / Caption</label>
+                    <input
+                      type="text"
+                      required
+                      value={newPhotoAdmin.title}
+                      onChange={e => setNewPhotoAdmin({ ...newPhotoAdmin, title: e.target.value })}
+                      placeholder="e.g. Garden Fountain"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-sans text-slate-900"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono uppercase font-bold text-slate-400">Direct Image URL</label>
+                    <input
+                      type="text"
+                      required
+                      value={newPhotoAdmin.url}
+                      onChange={e => setNewPhotoAdmin({ ...newPhotoAdmin, url: e.target.value })}
+                      placeholder="https://images.unsplash.com/..."
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-sans text-slate-900"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="rounded-xl bg-slate-900 text-white font-bold text-xs px-4 py-2.5 hover:bg-slate-800 transition-colors flex items-center gap-1.5"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>Insert Gallery Photo</span>
+                </button>
+              </form>
+
+              {/* Photos List */}
+              <div className="space-y-3">
+                <h4 className="font-serif font-bold text-slate-800 text-sm">Active Gallery Scenes ({communityPhotos.length})</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {communityPhotos.map((photo) => (
+                    <div key={photo.id} className="rounded-xl border border-slate-150 overflow-hidden bg-white flex flex-col justify-between shadow-xs">
+                      <img src={photo.url} alt={photo.title} referrerPolicy="no-referrer" className="aspect-video w-full object-cover bg-slate-100" />
+                      <div className="p-3 space-y-2">
+                        <h5 className="font-semibold text-slate-900 text-xs truncate">{photo.title}</h5>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Delete "${photo.title}" from the gallery?`)) {
+                              deleteCommunityPhoto(photo.id);
+                            }
+                          }}
+                          className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-rose-200 hover:bg-rose-50 text-rose-600 py-1.5 text-[11px] font-semibold transition-colors"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          <span>Delete Photo</span>
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

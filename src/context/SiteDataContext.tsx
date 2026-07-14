@@ -1,9 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { BoardMember, Committee, Announcement, DocumentItem, CalendarEvent, FaqItem } from '../types';
-import { boardMembers as defaultBoardMembers, committees as defaultCommittees, managementCompany as defaultManagement } from '../data/boardData';
-import { documentsList as defaultDocuments } from '../data/documentsData';
-import { eventsList as defaultEvents } from '../data/eventsData';
-import { faqList as defaultFaqs } from '../data/faqData';
+import { BoardMember, Committee, Announcement, DocumentItem, CalendarEvent, FaqItem, CommunityLink } from '../types';
 
 export interface SiteMetadata {
   name: string;
@@ -39,6 +35,7 @@ interface SiteDataContextType {
   addAnnouncement: (announcement: Omit<Announcement, 'id'>) => void;
   updateAnnouncement: (id: string, announcement: Partial<Announcement>) => void;
   deleteAnnouncement: (id: string) => void;
+  clearAllAnnouncements: () => void;
   boardMembers: BoardMember[];
   addBoardMember: (member: Omit<BoardMember, 'id'>) => void;
   updateBoardMember: (id: string, member: Partial<BoardMember>) => void;
@@ -51,6 +48,7 @@ interface SiteDataContextType {
   addDocument: (doc: Omit<DocumentItem, 'id'>) => void;
   updateDocument: (id: string, doc: Partial<DocumentItem>) => void;
   deleteDocument: (id: string) => void;
+  clearAllDocuments: () => void;
   events: CalendarEvent[];
   addEvent: (evt: Omit<CalendarEvent, 'id'>) => void;
   updateEvent: (id: string, evt: Partial<CalendarEvent>) => void;
@@ -60,7 +58,13 @@ interface SiteDataContextType {
   updateFaq: (id: string, faq: Partial<FaqItem>) => void;
   deleteFaq: (id: string) => void;
   communityPhotos: PhotoItem[];
+  addCommunityPhoto: (photo: Omit<PhotoItem, 'id'>) => void;
   updateCommunityPhoto: (id: string, url: string, title: string) => void;
+  deleteCommunityPhoto: (id: string) => void;
+  communityLinks: CommunityLink[];
+  addCommunityLink: (link: Omit<CommunityLink, 'id'>) => void;
+  updateCommunityLink: (id: string, partial: Partial<CommunityLink>) => void;
+  deleteCommunityLink: (id: string) => void;
   isEditMode: boolean;
   setIsEditMode: (val: boolean) => void;
   resetAllToDefault: () => void;
@@ -73,88 +77,38 @@ const defaultMetadata: SiteMetadata = {
   subtitle: 'Condominium Homes',
   heroTitle: 'Welcome Home.',
   heroSubtitle: 'The official website for Waterford Place Condominium Homes HOA.',
-  welcomeTitle: 'Welcome To our community portal',
-  welcomeText: "Welcome to the official website for Waterford Place Condominium Homes HOA. Here you'll find information about your community, board members, governing documents, upcoming events, and ways to get involved. We believe in fostering a warm, connected neighborhood where residents look out for one another.",
-  address: 'Killarney SE Smyrna, GA 30080',
-  facebookUrl: 'https://facebook.com/groups/waterfordplace',
-  facebookText: 'Join our private group',
-  emailListTitle: 'Email List',
-  emailListText: 'Sign up for announcements',
-  managementName: defaultManagement.name,
-  managementAddress: defaultManagement.address,
-  managementPhone: defaultManagement.phone,
-  managementFax: defaultManagement.fax,
-  managementEmail: defaultManagement.email,
-  managementHours: defaultManagement.officeHours,
-  managementEmergency: defaultManagement.emergencyPhone,
+  welcomeTitle: 'Welcome to our Community Portal',
+  welcomeText: 'Welcome to our official resident portal. Register below or access administrative settings in the Edit Site dashboard.',
+  address: 'Smyrna, GA 30080',
+  facebookUrl: '',
+  facebookText: '',
+  emailListTitle: '',
+  emailListText: '',
+  managementName: '',
+  managementAddress: '',
+  managementPhone: '',
+  managementFax: '',
+  managementEmail: '',
+  managementHours: '',
+  managementEmergency: '',
 };
 
-const defaultPhotos: PhotoItem[] = [
-  { id: 'p-1', url: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=600&q=80', title: 'Community Entrance' },
-  { id: 'p-2', url: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=600&q=80', title: 'Clubhouse Patio' },
-  { id: 'p-3', url: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=600&q=80', title: 'Swimming Pool' },
-  { id: 'p-4', url: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=600&q=80', title: 'Lush Green Courtyards' },
-  { id: 'p-5', url: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=600&q=80', title: 'Main Retention Pond & Fountain' },
-  { id: 'p-6', url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80', title: 'Resident Carport Garages' },
-];
+const defaultPhotos: PhotoItem[] = [];
 
-const defaultAnnouncements: Announcement[] = [
-  {
-    id: 'ann-1',
-    title: 'Spring Landscaping Schedule',
-    date: '2026-04-15',
-    category: 'Maintenance',
-    content: 'Our landscaping crews will be on site starting next week to begin the spring mulching and planting. Please ensure all personal items are removed from common planting beds.',
-    author: 'Board & Committees',
-  },
-  {
-    id: 'ann-2',
-    title: 'Pool Opening Date Announced',
-    date: '2026-04-02',
-    category: 'Social',
-    content: 'The community pool will officially open on Memorial Day weekend. Pool passes will be mailed to all residents in good standing by mid-May.',
-    author: 'Board & Committees',
-  },
-  {
-    id: 'ann-3',
-    title: 'Quarterly Board Meeting Minutes',
-    date: '2026-03-28',
-    category: 'Important',
-    content: 'The minutes from our Q1 board meeting have been posted to the Documents page. Key topics included the 2024 budget review and exterior maintenance plans.',
-    author: 'Board & Committees',
-  },
-];
+const defaultLinks: CommunityLink[] = [];
 
-const defaultEventsCopy: CalendarEvent[] = [
-  {
-    id: 'evt-c-1',
-    title: 'Community Cleanup Day',
-    date: '2026-04-20',
-    time: '9:00 AM',
-    location: 'Common Area Entrance',
-    category: 'social',
-    description: 'Let\'s work together to beautify our community entrance and flower beds!',
-  },
-  {
-    id: 'evt-c-2',
-    title: 'HOA Monthly Meeting',
-    date: '2026-05-15',
-    time: '7:00 PM',
-    location: 'Community Clubhouse & Zoom',
-    category: 'meeting',
-    description: 'Monthly board meeting. All co-owners welcome.',
-  },
-  {
-    id: 'evt-c-3',
-    title: 'Pool Opening Party',
-    date: '2026-05-25',
-    time: '12:00 PM',
-    location: 'Community Pool',
-    category: 'social',
-    description: 'Come celebrate the official opening of the pool with food and music!',
-  },
-  ...defaultEvents.filter(e => e.id !== 'evt-1' && e.id !== 'evt-2' && e.id !== 'evt-3'),
-];
+const defaultAnnouncements: Announcement[] = [];
+
+const defaultEventsCopy: CalendarEvent[] = [];
+
+const defaultBoardMembers: BoardMember[] = [];
+
+const defaultCommittees: Committee[] = [];
+
+const defaultFaqs: FaqItem[] = [];
+
+const defaultDocuments: DocumentItem[] = [];
+
 
 export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [siteMetadata, setSiteMetadata] = useState<SiteMetadata>(defaultMetadata);
@@ -165,11 +119,27 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [events, setEvents] = useState<CalendarEvent[]>(defaultEventsCopy);
   const [faqs, setFaqs] = useState<FaqItem[]>(defaultFaqs);
   const [communityPhotos, setCommunityPhotos] = useState<PhotoItem[]>(defaultPhotos);
+  const [communityLinks, setCommunityLinks] = useState<CommunityLink[]>(defaultLinks);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
 
   // Load from localStorage on mount
   useEffect(() => {
     try {
+      const isCleaned = localStorage.getItem('wp_data_cleaned_v2');
+      if (isCleaned !== 'true') {
+        localStorage.removeItem('wp_meta');
+        localStorage.removeItem('wp_announcements');
+        localStorage.removeItem('wp_board_members');
+        localStorage.removeItem('wp_committees');
+        localStorage.removeItem('wp_documents');
+        localStorage.removeItem('wp_events');
+        localStorage.removeItem('wp_faqs');
+        localStorage.removeItem('wp_photos');
+        localStorage.removeItem('wp_links');
+        localStorage.setItem('wp_data_cleaned_v2', 'true');
+        return; // Leave as empty arrays
+      }
+
       const savedMeta = localStorage.getItem('wp_meta');
       if (savedMeta) setSiteMetadata(JSON.parse(savedMeta));
 
@@ -193,6 +163,9 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       const savedPhotos = localStorage.getItem('wp_photos');
       if (savedPhotos) setCommunityPhotos(JSON.parse(savedPhotos));
+
+      const savedLinks = localStorage.getItem('wp_links');
+      if (savedLinks) setCommunityLinks(JSON.parse(savedLinks));
 
       const savedEditMode = localStorage.getItem('wp_edit_mode');
       if (savedEditMode) setIsEditMode(JSON.parse(savedEditMode));
@@ -244,6 +217,11 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       saveItem('wp_announcements', updated);
       return updated;
     });
+  };
+
+  const clearAllAnnouncements = () => {
+    setAnnouncements([]);
+    saveItem('wp_announcements', []);
   };
 
   const addBoardMember = (member: Omit<BoardMember, 'id'>) => {
@@ -330,6 +308,11 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
   };
 
+  const clearAllDocuments = () => {
+    setDocuments([]);
+    saveItem('wp_documents', []);
+  };
+
   const addEvent = (evt: Omit<CalendarEvent, 'id'>) => {
     setEvents((prev) => {
       const newEvt: CalendarEvent = {
@@ -386,10 +369,58 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
   };
 
+  const addCommunityPhoto = (photo: Omit<PhotoItem, 'id'>) => {
+    setCommunityPhotos((prev) => {
+      const newPhoto: PhotoItem = {
+        ...photo,
+        id: `p-${Date.now()}`,
+      };
+      const updated = [...prev, newPhoto];
+      saveItem('wp_photos', updated);
+      return updated;
+    });
+  };
+
   const updateCommunityPhoto = (id: string, url: string, title: string) => {
     setCommunityPhotos((prev) => {
       const updated = prev.map((item) => (item.id === id ? { ...item, url, title } : item));
       saveItem('wp_photos', updated);
+      return updated;
+    });
+  };
+
+  const deleteCommunityPhoto = (id: string) => {
+    setCommunityPhotos((prev) => {
+      const updated = prev.filter((item) => item.id !== id);
+      saveItem('wp_photos', updated);
+      return updated;
+    });
+  };
+
+  const addCommunityLink = (link: Omit<CommunityLink, 'id'>) => {
+    setCommunityLinks((prev) => {
+      const newLink: CommunityLink = {
+        ...link,
+        id: `link-${Date.now()}`,
+      };
+      const updated = [...prev, newLink];
+      saveItem('wp_links', updated);
+      return updated;
+    });
+  };
+
+  const updateCommunityLink = (id: string, partial: Partial<CommunityLink>) => {
+    setCommunityLinks((prev) => {
+      const updated = prev.map((item) => (item.id === id ? { ...item, ...partial } : item));
+      saveItem('wp_links', updated);
+      return updated;
+    });
+  };
+
+  const deleteCommunityLink = (id: string) => {
+    setCommunityLinks((prev) => {
+      const updated = prev.filter((item) => item.id !== id);
+      saveItem('wp_links', updated);
       return updated;
     });
   };
@@ -400,7 +431,7 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const resetAllToDefault = () => {
-    if (confirm('Are you sure you want to reset all modifications back to default? This will clear all edits.')) {
+    if (confirm('Are you sure you want to reset all site data to a clean template? This will wipe all custom site content.')) {
       setSiteMetadata(defaultMetadata);
       setAnnouncements(defaultAnnouncements);
       setBoardMembers(defaultBoardMembers);
@@ -409,6 +440,7 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setEvents(defaultEventsCopy);
       setFaqs(defaultFaqs);
       setCommunityPhotos(defaultPhotos);
+      setCommunityLinks(defaultLinks);
       setIsEditMode(false);
 
       localStorage.removeItem('wp_meta');
@@ -419,6 +451,7 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       localStorage.removeItem('wp_events');
       localStorage.removeItem('wp_faqs');
       localStorage.removeItem('wp_photos');
+      localStorage.removeItem('wp_links');
       localStorage.removeItem('wp_edit_mode');
     }
   };
@@ -432,6 +465,7 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         addAnnouncement,
         updateAnnouncement,
         deleteAnnouncement,
+        clearAllAnnouncements,
         boardMembers,
         addBoardMember,
         updateBoardMember,
@@ -444,6 +478,7 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         addDocument,
         updateDocument,
         deleteDocument,
+        clearAllDocuments,
         events,
         addEvent,
         updateEvent,
@@ -453,7 +488,13 @@ export const SiteDataProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         updateFaq,
         deleteFaq,
         communityPhotos,
+        addCommunityPhoto,
         updateCommunityPhoto,
+        deleteCommunityPhoto,
+        communityLinks,
+        addCommunityLink,
+        updateCommunityLink,
+        deleteCommunityLink,
         isEditMode,
         setIsEditMode: handleSetIsEditMode,
         resetAllToDefault,
