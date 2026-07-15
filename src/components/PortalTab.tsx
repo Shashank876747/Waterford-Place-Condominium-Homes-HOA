@@ -3,7 +3,7 @@ import {
   KeyRound, DollarSign, Wrench, Hammer, CheckCircle2, 
   UserCheck, LogOut, ArrowRight, Loader2, CreditCard, 
   FileText, History, Info, AlertTriangle, PenTool, Check, Trash2, UserPlus,
-  ExternalLink
+  ExternalLink, Shield, Calendar, MessageSquare, Globe, Lock, Settings
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MaintenanceRequest, ArcRequest } from '../types';
