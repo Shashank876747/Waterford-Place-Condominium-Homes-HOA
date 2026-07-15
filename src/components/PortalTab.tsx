@@ -652,7 +652,7 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
               
               {/* Left 2 Columns: Sub-form or dashboard */}
-              <div className={portalView === 'maintenance' ? "lg:col-span-3" : "lg:col-span-2"}>
+              <div className={(portalView === 'maintenance' || portalView === 'dues') ? "lg:col-span-3" : "lg:col-span-2"}>
                 <AnimatePresence mode="wait">
                   {portalView === 'dues' && (
                     <motion.div
@@ -662,161 +662,33 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
                       exit={{ opacity: 0, y: -10 }}
                       className="space-y-6"
                     >
-                      {/* Dues and simulated billing */}
-                      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                          <h4 className="font-serif font-bold text-slate-900 text-base flex items-center gap-2">
-                            <CreditCard className="h-5 w-5 text-amber-500" />
+                      {/* External Portal Link Box */}
+                      <div className="rounded-2xl border border-slate-200 bg-white p-8 sm:p-10 shadow-sm text-center space-y-6 max-w-2xl mx-auto">
+                        <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 border border-amber-100 shadow-sm">
+                          <CreditCard className="h-8 w-8" />
+                        </div>
+                        <div className="space-y-2.5">
+                          <h4 className="font-serif font-bold text-slate-900 text-xl">
                             Assessments & Payment Gateway
                           </h4>
-                          <span className="text-xs font-mono font-bold text-amber-500">
-                            Sandbox Secure
-                          </span>
+                          <p className="text-sm text-slate-500 leading-relaxed max-w-md mx-auto">
+                            To view your outstanding balance, set up automatic recurring payments, or securely pay your association dues, please visit our designated online billing gateway.
+                          </p>
                         </div>
-
-                        {/* Balance display */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                          <div className="rounded-xl bg-slate-50 p-4 border border-slate-100 flex flex-col justify-between h-28">
-                            <span className="text-xs text-slate-400 font-mono font-bold uppercase tracking-wider">Account Balance</span>
-                            <span className={`text-3xl font-extrabold ${duesBalance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                              ${duesBalance.toFixed(2)}
-                            </span>
-                            <span className="text-[10px] text-slate-500">
-                              {duesBalance > 0 ? 'July assessment outstanding' : 'Account fully paid. Thanks!'}
-                            </span>
-                          </div>
-
-                          <div className="md:col-span-2 space-y-3 text-xs text-slate-600 leading-normal">
-                            <p className="font-semibold text-slate-800">Payment Due Dates:</p>
-                            <p>
-                              Monthly assessments of <span className="font-bold text-slate-900">$385.00</span> are charged automatically on the 1st. Standard grace period is provided until 11:59 PM on the 10th. Payments received after the 10th will instantly apply a $25.00 late charge.
-                            </p>
-                          </div>
+                        <div className="pt-2">
+                          <a
+                            href="https://acs.cincwebaxis.com/account/quickpay"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white px-8 py-4 text-sm font-semibold shadow-lg shadow-amber-600/10 transition-all hover:scale-[1.02] cursor-pointer"
+                          >
+                            <span>Access QuickPay Gateway</span>
+                            <ExternalLink className="h-4.5 w-4.5" />
+                          </a>
                         </div>
-
-                        {duesBalance > 0 ? (
-                          /* Dues Payment Form */
-                          <form onSubmit={handlePayDues} className="border-t border-slate-100 pt-6 space-y-4">
-                            <h5 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
-                              Payment Credentials (Simulated)
-                            </h5>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <div className="space-y-1">
-                                <label className="text-xs text-slate-500 font-semibold">Name on Card</label>
-                                <input
-                                  type="text"
-                                  required
-                                  value={cardName}
-                                  onChange={(e) => setCardName(e.target.value)}
-                                  placeholder="Arthur Pendelton"
-                                  className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-blue-900"
-                                />
-                              </div>
-
-                              <div className="space-y-1">
-                                <label className="text-xs text-slate-500 font-semibold">Simulated Card Number</label>
-                                <input
-                                  type="text"
-                                  required
-                                  value={cardNumber}
-                                  onChange={(e) => setCardNumber(e.target.value)}
-                                  placeholder="4111 2222 3333 4444"
-                                  className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-blue-900 font-mono"
-                                />
-                              </div>
-
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                  <label className="text-xs text-slate-500 font-semibold">Expiration</label>
-                                  <input
-                                    type="text"
-                                    required
-                                    value={cardExpiry}
-                                    onChange={(e) => setCardExpiry(e.target.value)}
-                                    placeholder="MM/YY"
-                                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-blue-900 font-mono"
-                                  />
-                                </div>
-                                <div className="space-y-1">
-                                  <label className="text-xs text-slate-500 font-semibold">CVV</label>
-                                  <input
-                                    type="password"
-                                    required
-                                    maxLength={3}
-                                    value={cardCvv}
-                                    onChange={(e) => setCardCvv(e.target.value)}
-                                    placeholder="•••"
-                                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-blue-900 font-mono"
-                                  />
-                                </div>
-                              </div>
-
-                              <div className="space-y-1">
-                                <label className="text-xs text-slate-500 font-semibold">Payment Amount ($)</label>
-                                <input
-                                  type="text"
-                                  required
-                                  value={paymentAmount}
-                                  onChange={(e) => setPaymentAmount(e.target.value)}
-                                  className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-blue-900 font-mono"
-                                />
-                              </div>
-                            </div>
-
-                            <button
-                              type="submit"
-                              disabled={isPaying}
-                              className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white py-3 text-xs font-bold shadow transition-colors"
-                            >
-                              {isPaying ? (
-                                <>
-                                  <Loader2 className="h-4 w-4 animate-spin text-white" />
-                                  <span>Authorizing Sandbox Charge...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <DollarSign className="h-4 w-4 text-amber-400" />
-                                  <span>Submit Simulated Payment of ${parseFloat(paymentAmount || '0').toFixed(2)}</span>
-                                </>
-                              )}
-                            </button>
-                          </form>
-                        ) : (
-                          /* Paid confirmation screen */
-                          <div className="border-t border-slate-100 pt-6 text-center space-y-4 py-4" id="dues-paid-screen">
-                            <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 border border-emerald-200">
-                              <Check className="h-6 w-6 stroke-[2.5]" />
-                            </div>
-                            <div className="space-y-1.5">
-                              <h4 className="font-serif font-bold text-slate-900 text-lg">
-                                Your Account is Fully Paid!
-                              </h4>
-                              <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-                                Thank you! Your account balance is currently $0.00. No further assessment payments are scheduled until August 1st.
-                              </p>
-                            </div>
-                          </div>
-                        )}
-
-                        {paymentReceipt && (
-                          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/20 p-5 space-y-3 text-xs" id="payment-receipt-box">
-                            <div className="flex items-center justify-between border-b border-emerald-100 pb-2 text-emerald-800 font-bold">
-                              <span>Simulated Transaction Success Receipt</span>
-                              <CheckCircle2 className="h-4 w-4" />
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 text-slate-600">
-                              <span>Receipt Number:</span>
-                              <span className="font-bold text-slate-800 font-mono text-right">{paymentReceipt.txId}</span>
-                              <span>Date/Time:</span>
-                              <span className="font-mono text-right">{paymentReceipt.date}</span>
-                              <span>Amount Processed:</span>
-                              <span className="font-bold text-slate-800 text-right">${paymentReceipt.amount.toFixed(2)}</span>
-                              <span>Outstanding Balance:</span>
-                              <span className="font-bold text-emerald-600 text-right">$0.00</span>
-                            </div>
-                          </div>
-                        )}
+                        <div className="pt-4 border-t border-slate-100 text-[11px] text-slate-400">
+                          You will be securely redirected to our third-party assessment and payment processing portal.
+                        </div>
                       </div>
                     </motion.div>
                   )}
@@ -994,31 +866,7 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
               {/* Right Column: Portal activity logs & history trackers */}
               <div className="space-y-6">
                 
-                {/* Condition-based Side tracker */}
-                {portalView === 'dues' && (
-                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-                    <h4 className="font-serif font-bold text-slate-900 text-base flex items-center gap-1.5 border-b border-slate-100 pb-2">
-                      <History className="h-4.5 w-4.5 text-blue-900" />
-                      Transaction History
-                    </h4>
-                    <div className="space-y-3.5">
-                      {paymentHistory.map((pm, idx) => (
-                        <div key={pm.id} className="flex justify-between items-start text-xs border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-                          <div>
-                            <p className="font-semibold text-slate-800">{pm.method}</p>
-                            <p className="text-[10px] text-slate-400 font-mono mt-0.5">{pm.date} • {pm.id}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-bold text-slate-900">${pm.amount.toFixed(2)}</p>
-                            <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200/45">
-                              {pm.status}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+
 
 
 
