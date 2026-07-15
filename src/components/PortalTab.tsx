@@ -626,7 +626,15 @@ export default function PortalTab({ initialView, autoLogin }: PortalTabProps = {
                   return (
                     <button
                       key={sec.id}
-                      onClick={() => setPortalView(sec.id as any)}
+                      onClick={() => {
+                        if (sec.id === 'maintenance') {
+                          window.open('https://acs.cincwebaxis.com/account/loginmodernthemes', '_blank', 'noopener,noreferrer');
+                        } else if (sec.id === 'dues') {
+                          window.open('https://acs.cincwebaxis.com/account/quickpay', '_blank', 'noopener,noreferrer');
+                        } else {
+                          setPortalView(sec.id as any);
+                        }
+                      }}
                       id={`portal-nav-btn-${sec.id}`}
                       className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
                         portalView === sec.id

@@ -32,6 +32,14 @@ export default function App() {
 
   const handleQuickNavigate = (tab: string, subTab?: 'dues' | 'maintenance' | 'arc') => {
     if (tab === 'portal' && subTab) {
+      if (subTab === 'maintenance') {
+        window.open('https://acs.cincwebaxis.com/account/loginmodernthemes', '_blank', 'noopener,noreferrer');
+        return;
+      }
+      if (subTab === 'dues') {
+        window.open('https://acs.cincwebaxis.com/account/quickpay', '_blank', 'noopener,noreferrer');
+        return;
+      }
       setPortalSubTab(subTab);
       setPortalAutoLogin(true);
     } else {
